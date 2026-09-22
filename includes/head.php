@@ -14,7 +14,9 @@
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
     <link rel="stylesheet" href="<?= asset('css/main.css') ?>?v=<?= ASSET_VERSION ?>">
 
-    <link rel="icon" href="<?= asset('images/ui/favicon.svg') ?>" type="image/svg+xml">
+    <link rel="icon" href="<?= asset('images/ui/favicon.png') ?>" type="image/png" sizes="48x48">
+    <link rel="icon" href="<?= asset('images/ui/favicon.ico') ?>" sizes="any">
+    <link rel="apple-touch-icon" href="<?= asset('images/ui/apple-touch-icon.png') ?>">
 </head>
 
 <body class="page-<?= e($current_page ?? 'home') ?>">

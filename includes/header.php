@@ -19,16 +19,7 @@ $purchase_active = in_array($current_page ?? '', ['originals', 'prints', 'purcha
 <header class="site-header" data-header>
     <div class="site-header__inner">
         <a class="brand" href="<?= page_url('index.php') ?>" aria-label="<?= e(SITE_NAME) ?> — Home">
-            <span class="brand__mark" aria-hidden="true">
-                <svg viewBox="0 0 48 48" width="40" height="40" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <circle cx="24" cy="24" r="22.5" stroke="currentColor" stroke-width="1"/>
-                    <text x="24" y="29" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-size="18" font-weight="500" fill="currentColor" letter-spacing="1">LS</text>
-                </svg>
-            </span>
-            <span class="brand__text">
-                <span class="brand__name"><?= e(SITE_NAME) ?></span>
-                <span class="brand__tag"><?= e(SITE_TAGLINE) ?></span>
-            </span>
+            <img class="brand__logo" src="<?= asset('images/logo.png') ?>" alt="<?= e(SITE_NAME) ?>" width="200" height="58" decoding="async">
         </a>
 
         <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-nav-toggle>

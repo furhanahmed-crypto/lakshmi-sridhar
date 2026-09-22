@@ -19,7 +19,7 @@ define('WHATSAPP_NUMBER', '353894413077'); // digits only for wa.me
 define('WHATSAPP_URL', 'https://wa.me/' . WHATSAPP_NUMBER);
 define('CONTACT_EMAIL', 'Lakshmi.Sridharj@gmail.com');
 
-define('ASSET_VERSION', '1.3.5');
+define('ASSET_VERSION', '1.3.7');
 
 /**
  * Resolve asset path relative to site root.

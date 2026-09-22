@@ -2,16 +2,7 @@
     <div class="container site-footer__grid">
         <div class="site-footer__brand reveal">
             <a class="brand brand--footer" href="<?= page_url('index.php') ?>">
-                <span class="brand__mark" aria-hidden="true">
-                    <svg viewBox="0 0 48 48" width="36" height="36" fill="none" xmlns="http://www.w3.org/2000/svg">
-                        <circle cx="24" cy="24" r="22.5" stroke="currentColor" stroke-width="1"/>
-                        <text x="24" y="29" text-anchor="middle" font-family="Cormorant Garamond, Georgia, serif" font-size="18" font-weight="500" fill="currentColor">LS</text>
-                    </svg>
-                </span>
-                <span class="brand__text">
-                    <span class="brand__name"><?= e(SITE_NAME) ?></span>
-                    <span class="brand__tag">Studio in Ireland</span>
-                </span>
+                <img class="brand__logo brand__logo--footer" src="<?= asset('images/logo.png') ?>" alt="<?= e(SITE_NAME) ?>" width="180" height="52" decoding="async">
             </a>
             <p class="site-footer__note">
                 Original paintings, fine art prints, and hands-on training — created with love in Ireland.
