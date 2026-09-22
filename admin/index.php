@@ -4,14 +4,14 @@ require_once __DIR__ . '/auth.php';
 $error = '';
 
 if (admin_logged_in()) {
-    header('Location: products.php');
+    header('Location: ' . admin_url('products.php'));
     exit;
 }
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $password = (string) ($_POST['password'] ?? '');
     if (admin_attempt_login($password)) {
-        header('Location: products.php');
+        header('Location: ' . admin_url('products.php'));
         exit;
     }
     $error = 'Incorrect password.';
@@ -19,6 +19,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -28,6 +29,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="admin.css?v=<?= ASSET_VERSION ?>">
 </head>
+
 <body class="admin">
     <div class="login-wrap">
         <form class="login-card" method="post" autocomplete="current-password">
@@ -44,4 +46,5 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         </form>
     </div>
 </body>
+
 </html>

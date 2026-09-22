@@ -9,7 +9,7 @@ $error = '';
 
 if (!$isNew && !$product) {
     $_SESSION['admin_flash'] = 'Product not found.';
-    header('Location: products.php');
+    header('Location: ' . admin_url('products.php'));
     exit;
 }
 
@@ -57,7 +57,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $savedId = product_save($payload, $isNew);
         if ($savedId) {
             $_SESSION['admin_flash'] = $isNew ? 'Product added.' : 'Product updated.';
-            header('Location: products.php');
+            header('Location: ' . admin_url('products.php'));
             exit;
         }
 

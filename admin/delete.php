@@ -3,7 +3,7 @@ require_once __DIR__ . '/auth.php';
 admin_require_login();
 
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
-    header('Location: products.php');
+    header('Location: ' . admin_url('products.php'));
     exit;
 }
 
@@ -14,5 +14,5 @@ if ($id !== '' && product_delete($id)) {
     $_SESSION['admin_flash'] = db_last_error() ?: 'Could not delete product.';
 }
 
-header('Location: products.php');
+header('Location: ' . admin_url('products.php'));
 exit;

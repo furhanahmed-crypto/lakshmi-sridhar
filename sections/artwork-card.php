@@ -24,12 +24,12 @@ $default_size = $item['default_size'] ?? 'S';
 $active_key = isset($sizes[$default_size]) ? $default_size : array_key_first($sizes);
 $active = ($active_key !== null && isset($sizes[$active_key])) ? $sizes[$active_key] : null;
 
-$enquire_subject = $context === 'original' ? 'Enquire to Purchase' : 'Enquire to Print';
 $enquire_label = $context === 'original' ? 'Enquire to Purchase' : 'Enquire to Print';
-$enquire_href = page_url('contact.php')
-    . '?subject=' . rawurlencode($enquire_subject)
-    . '&artwork=' . rawurlencode($item['title'] ?? '')
-    . '&size=' . rawurlencode($active_key ?? '');
+$enquire_href = whatsapp_enquire_url(
+    (string) ($item['title'] ?? 'this artwork'),
+    (string) ($active_key ?? 'S'),
+    (string) ($active['label'] ?? '')
+);
 ?>
 <article
     class="art-card<?= $is_shop ? ' art-card--product' : '' ?> reveal"
@@ -38,6 +38,7 @@ $enquire_href = page_url('contact.php')
         data-product-card
         data-product-id="<?= e($item['id'] ?? '') ?>"
         data-product-title="<?= e($item['title'] ?? '') ?>"
+        data-whatsapp-base="<?= e(WHATSAPP_URL) ?>"
         data-product-sizes='<?= json_encode($sizes, JSON_HEX_TAG | JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_QUOT) ?>'
         data-selected-size="<?= e($active_key ?? '') ?>"
     <?php endif; ?>
@@ -83,7 +84,13 @@ $enquire_href = page_url('contact.php')
             </div>
 
             <div class="art-card__footer">
-                <a class="btn btn--primary btn--sm" data-enquire-link href="<?= e($enquire_href) ?>">
+                <a
+                    class="btn btn--primary btn--sm"
+                    data-enquire-link
+                    href="<?= e($enquire_href) ?>"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                >
                     <?= e($enquire_label) ?>
                 </a>
             </div>

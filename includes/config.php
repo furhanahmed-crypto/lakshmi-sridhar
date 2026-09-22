@@ -19,7 +19,7 @@ define('WHATSAPP_NUMBER', '353894413077'); // digits only for wa.me
 define('WHATSAPP_URL', 'https://wa.me/' . WHATSAPP_NUMBER);
 define('CONTACT_EMAIL', 'Lakshmi.Sridharj@gmail.com');
 
-define('ASSET_VERSION', '1.8.2');
+define('ASSET_VERSION', '1.8.3');
 
 require_once __DIR__ . '/db.php';
 
@@ -29,6 +29,27 @@ require_once __DIR__ . '/db.php';
 function format_money(int|float $amount): string
 {
     return mb_chr(0x20AC, 'UTF-8') . number_format((float) $amount, 0, '.', ',');
+}
+
+/**
+ * WhatsApp enquire link with prefilled product + size message.
+ */
+function whatsapp_enquire_url(string $title, string $sizeCode, string $sizeLabel = ''): string
+{
+    $inch = trim($sizeLabel !== '' ? $sizeLabel : $sizeCode);
+    $inch = str_replace(['"', '?', '?'], '', $inch);
+    if ($inch !== '' && !preg_match('/inch$/i', $inch)) {
+        $inch .= 'inch';
+    }
+
+    $text = sprintf(
+        'Hi, I want to enquire about %s. The size I prefer is %s (%s).',
+        $title,
+        $sizeCode,
+        $inch
+    );
+
+    return WHATSAPP_URL . '?text=' . rawurlencode($text);
 }
 
 /**

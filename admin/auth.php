@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Simple admin session helpers.
  */
@@ -19,6 +20,26 @@ function admin_password(): string
     return (string) ($cfg['admin_password'] ?? 'Lakshmi@1234');
 }
 
+/**
+ * Absolute URL under /admin/ so redirects work when visiting /admin (no trailing slash).
+ * Relative "products.php" from /admin resolves to /products.php in the browser.
+ */
+function admin_url(string $path = ''): string
+{
+    $script = str_replace('\\', '/', (string) ($_SERVER['SCRIPT_NAME'] ?? '/admin/index.php'));
+    $dir = dirname($script);
+    // SCRIPT_NAME can be "/admin" when the directory URL has no trailing slash
+    if (basename($script) === 'admin') {
+        $dir = $script;
+    }
+    $dir = rtrim($dir, '/');
+    if ($dir === '' || $dir === '.') {
+        $dir = '/admin';
+    }
+    $path = ltrim($path, '/');
+    return $path === '' ? $dir . '/' : $dir . '/' . $path;
+}
+
 function admin_logged_in(): bool
 {
     return !empty($_SESSION['admin_ok']);
@@ -27,7 +48,7 @@ function admin_logged_in(): bool
 function admin_require_login(): void
 {
     if (!admin_logged_in()) {
-        header('Location: index.php');
+        header('Location: ' . admin_url('index.php'));
         exit;
     }
 }

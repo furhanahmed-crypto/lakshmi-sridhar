@@ -74,14 +74,21 @@
 
     var link = card.querySelector("[data-enquire-link]");
     if (link) {
-      try {
-        var url = new URL(link.href, window.location.origin);
-        url.searchParams.set("size", sizeKey);
-        if (size.label) url.searchParams.set("size_label", size.label);
-        if (size.price != null) url.searchParams.set("price", String(size.price));
-        link.href = url.pathname + url.search;
-      } catch (err) {
-        /* ignore malformed URLs */
+      var title = card.getAttribute("data-product-title") || "this artwork";
+      var base = card.getAttribute("data-whatsapp-base") || "";
+      var label = size.label || sizeKey;
+      var inch = String(label).replace(/["″”]/g, "");
+      if (inch && !/inch$/i.test(inch)) inch += "inch";
+      var text =
+        "Hi, I want to enquire about " +
+        title +
+        ". The size I prefer is " +
+        sizeKey +
+        " (" +
+        inch +
+        ").";
+      if (base) {
+        link.href = base + "?text=" + encodeURIComponent(text);
       }
     }
   }
