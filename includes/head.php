@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -15,5 +16,6 @@
 
     <link rel="icon" href="<?= asset('images/ui/favicon.svg') ?>" type="image/svg+xml">
 </head>
+
 <body class="page-<?= e($current_page ?? 'home') ?>">
     <a class="skip-link" href="#main">Skip to content</a>

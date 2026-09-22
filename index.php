@@ -88,7 +88,8 @@ require __DIR__ . '/includes/header.php';
 
             <div class="art-grid art-grid--projects">
                 <?php foreach ($featured as $item): ?>
-                    <?php $context = 'project'; include __DIR__ . '/sections/artwork-card.php'; ?>
+                    <?php $context = 'project';
+                    include __DIR__ . '/sections/artwork-card.php'; ?>
                 <?php endforeach; ?>
             </div>
 
@@ -98,7 +99,8 @@ require __DIR__ . '/includes/header.php';
         </div>
     </section>
 
-    <?php $variant = 'section'; include __DIR__ . '/sections/whatsapp-cta.php'; ?>
+    <?php $variant = 'section';
+    include __DIR__ . '/sections/whatsapp-cta.php'; ?>
 
     <section class="connect-strip" aria-label="Stay connected">
         <div class="container connect-strip__inner">

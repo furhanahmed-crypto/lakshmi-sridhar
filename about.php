@@ -12,7 +12,7 @@ $title = 'The Story Behind the Brush';
 $subtitle = null;
 $lede = 'A painting is really just a conversation — between the artist, the canvas, and whoever eventually stands in front of it.';
 $image = 'images/artwork/about-portrait.jpg';
-$image_alt = 'Charcoal portrait sketch — Unsplash reference';
+$image_alt = 'Charcoal figure study — Unsplash reference';
 $eyebrow = 'About the Artist';
 ?>
 
@@ -25,7 +25,7 @@ $eyebrow = 'About the Artist';
                 <div class="about-story__frame">
                     <?php
                     $image = 'images/artwork/quiet-room.jpg';
-                    $image_alt = 'Charcoal figure study — Unsplash reference';
+                    $image_alt = 'Pen and ink drawing — Unsplash reference';
                     $image_loading = 'lazy';
                     include __DIR__ . '/sections/media.php';
                     ?>

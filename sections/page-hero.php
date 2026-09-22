@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Interior page hero.
  * @var string $title

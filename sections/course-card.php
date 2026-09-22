@@ -1,4 +1,5 @@
 <?php
+
 /**
  * Course card.
  * @var array $course
