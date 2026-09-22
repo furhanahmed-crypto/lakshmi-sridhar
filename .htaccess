@@ -1,0 +1,14 @@
+RewriteEngine On
+
+# Serve existing files/directories as-is
+RewriteCond %{REQUEST_FILENAME} -f [OR]
+RewriteCond %{REQUEST_FILENAME} -d
+RewriteRule ^ - [L]
+
+# Optional clean-ish fallbacks
+RewriteRule ^about/?$ about.php [L]
+RewriteRule ^recent-projects/?$ recent-projects.php [L]
+RewriteRule ^courses/?$ courses.php [L]
+RewriteRule ^originals/?$ originals.php [L]
+RewriteRule ^prints/?$ prints.php [L]
+RewriteRule ^contact/?$ contact.php [L]

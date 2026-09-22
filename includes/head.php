@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="<?= e($page_description ?? 'Original paintings, fine art prints, and hands-on training by Lakshmi Sridhar — created with love in Ireland.') ?>">
+    <title><?= e(($page_title ?? 'Home') . ' — ' . SITE_NAME) ?></title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.5.2/css/all.min.css">
+    <link rel="stylesheet" href="<?= asset('css/main.css') ?>?v=<?= ASSET_VERSION ?>">
+
+    <link rel="icon" href="<?= asset('images/ui/favicon.svg') ?>" type="image/svg+xml">
+</head>
+<body class="page-<?= e($current_page ?? 'home') ?>">
+    <a class="skip-link" href="#main">Skip to content</a>
