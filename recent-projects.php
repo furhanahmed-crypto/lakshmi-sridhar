@@ -5,16 +5,17 @@ $current_page = 'projects';
 $page_title = 'Recent Projects';
 $page_description = 'From the studio — recent paintings and series by Lakshmi Sridhar, available as originals or prints.';
 
-$artworks = require __DIR__ . '/data/artworks.php';
+$artworks = products();
+$artworks = array_values(array_filter($artworks, fn($a) => ($a['status'] ?? 'available') !== 'sold'));
 
 require __DIR__ . '/includes/head.php';
 require __DIR__ . '/includes/header.php';
 
 $title = 'From the Studio — Recent Work';
 $subtitle = null;
-$lede = "A look at what I've been painting lately. Each piece below is part of an ongoing series, and many are available as originals or prints — just tap through to find out more.";
-$image = 'images/artwork/projects-hero.jpg';
-$image_alt = 'Charcoal portrait sketch — Unsplash reference';
+$lede = "A look at what I've been painting lately. Each piece below is part of an ongoing series — enquire to purchase an original or order a print.";
+$image = 'images/artwork/image-13.jpeg';
+$image_alt = 'Recent artwork by Lakshmi Sridhar';
 $eyebrow = 'Recent Projects';
 ?>
 
@@ -23,11 +24,14 @@ $eyebrow = 'Recent Projects';
 
     <section class="section" aria-label="Recent artwork">
         <div class="container">
-            <div class="art-grid art-grid--projects">
+            <?php $items = $artworks; include __DIR__ . '/sections/products-notice.php'; ?>
+            <?php if ($artworks): ?>
+            <div class="art-grid art-grid--shop">
                 <?php foreach ($artworks as $item): ?>
-                    <?php $context = 'project'; include __DIR__ . '/sections/artwork-card.php'; ?>
+                    <?php $context = in_array('print', $item['tags'] ?? [], true) ? 'print' : 'original'; include __DIR__ . '/sections/artwork-card.php'; ?>
                 <?php endforeach; ?>
             </div>
+            <?php endif; ?>
         </div>
     </section>
 

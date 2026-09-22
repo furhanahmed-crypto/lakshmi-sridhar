@@ -1,0 +1,8 @@
+# Secrets & local overrides
+includes/db.local.php
+.env
+.env.*
+
+# OS / editor
+.DS_Store
+*.log

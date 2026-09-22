@@ -5,8 +5,8 @@ $current_page = 'home';
 $page_title = 'Home';
 $page_description = 'Original paintings, fine art prints, and hands-on training by Lakshmi Sridhar — created with love in Ireland.';
 
-$artworks = require __DIR__ . '/data/artworks.php';
-$featured = array_values(array_filter($artworks, fn($a) => !empty($a['featured'])));
+$artworks = products();
+$featured = array_values(array_filter($artworks, fn($a) => !empty($a['featured']) && ($a['status'] ?? 'available') !== 'sold'));
 $featured = array_slice($featured, 0, 3);
 
 require __DIR__ . '/includes/head.php';
@@ -32,8 +32,8 @@ require __DIR__ . '/includes/header.php';
             <div class="home-hero__media reveal">
                 <div class="home-hero__frame">
                     <?php
-                    $image = 'images/artwork/hero-studio.jpg';
-                    $image_alt = 'Charcoal portrait sketch — Unsplash reference';
+                    $image = 'images/hero.jpeg';
+                    $image_alt = 'Lakshmi Sridhar with a framed portrait drawing at an exhibition';
                     $image_loading = 'eager';
                     include __DIR__ . '/sections/media.php';
                     ?>
@@ -83,15 +83,18 @@ require __DIR__ . '/includes/header.php';
             <div class="section-intro reveal">
                 <p class="eyebrow">From the studio</p>
                 <h2 id="featured-heading" class="section-title">A few pieces from this season</h2>
-                <p class="lede">A glimpse of recent work — many available as originals or prints. Tap through to learn the story behind each one.</p>
+                <p class="lede">A glimpse of recent work — enquire to purchase an original or order a print.</p>
             </div>
 
-            <div class="art-grid art-grid--projects">
+            <?php $items = $featured; include __DIR__ . '/sections/products-notice.php'; ?>
+            <?php if ($featured): ?>
+            <div class="art-grid art-grid--shop">
                 <?php foreach ($featured as $item): ?>
-                    <?php $context = 'project';
+                    <?php $context = in_array('print', $item['tags'] ?? [], true) ? 'print' : 'original';
                     include __DIR__ . '/sections/artwork-card.php'; ?>
                 <?php endforeach; ?>
             </div>
+            <?php endif; ?>
 
             <div class="btn-row reveal" style="margin-top: 2.5rem;">
                 <a class="btn btn--secondary" href="<?= page_url('recent-projects.php') ?>">See all recent projects</a>

@@ -5,8 +5,11 @@ $current_page = 'originals';
 $page_title = 'Original Paintings';
 $page_description = 'One-of-a-kind original paintings by Lakshmi Sridhar — painted, finished, and signed by hand in Ireland.';
 
-$artworks = require __DIR__ . '/data/artworks.php';
-$originals = array_values(array_filter($artworks, fn($a) => in_array('original', $a['tags'] ?? [], true)));
+$artworks = products();
+$originals = array_values(array_filter(
+    $artworks,
+    fn($a) => in_array('original', $a['tags'] ?? [], true) && ($a['status'] ?? 'available') !== 'sold'
+));
 $faqs_all = require __DIR__ . '/data/faqs.php';
 
 require __DIR__ . '/includes/head.php';
@@ -15,8 +18,8 @@ require __DIR__ . '/includes/header.php';
 $title = 'Original Paintings';
 $subtitle = null;
 $lede = "Each original is a one-of-a-kind piece — painted, finished, and signed entirely by hand. When you bring home an original, you're not just getting a painting; you're getting the exact brushstrokes, colour decisions, and quiet hours that went into making it.";
-$image = 'images/artwork/originals-hero.jpg';
-$image_alt = 'Charcoal figure study — Unsplash reference';
+$image = 'images/artwork/image-14.jpeg';
+$image_alt = 'Original painting by Lakshmi Sridhar';
 $eyebrow = 'Purchase';
 ?>
 
@@ -25,11 +28,14 @@ $eyebrow = 'Purchase';
 
     <section class="section" aria-label="Available originals">
         <div class="container">
+            <?php $items = $originals; include __DIR__ . '/sections/products-notice.php'; ?>
+            <?php if ($originals): ?>
             <div class="art-grid art-grid--shop">
                 <?php foreach ($originals as $item): ?>
                     <?php $context = 'original'; include __DIR__ . '/sections/artwork-card.php'; ?>
                 <?php endforeach; ?>
             </div>
+            <?php endif; ?>
         </div>
     </section>
 

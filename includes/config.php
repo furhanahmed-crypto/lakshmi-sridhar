@@ -19,7 +19,50 @@ define('WHATSAPP_NUMBER', '353894413077'); // digits only for wa.me
 define('WHATSAPP_URL', 'https://wa.me/' . WHATSAPP_NUMBER);
 define('CONTACT_EMAIL', 'Lakshmi.Sridharj@gmail.com');
 
-define('ASSET_VERSION', '1.3.7');
+define('ASSET_VERSION', '1.7.1');
+
+require_once __DIR__ . '/db.php';
+
+/**
+ * Format a numeric price as EUR for display.
+ */
+function format_money(int|float $amount): string
+{
+    return mb_chr(0x20AC, 'UTF-8') . number_format((float) $amount, 0, '.', ',');
+}
+
+/**
+ * Last products() load error message, or null when OK.
+ */
+function products_error(): ?string
+{
+    return $GLOBALS['_products_error'] ?? null;
+}
+
+/**
+ * Load products from MySQL only (source of truth).
+ * Returns [] when DB fails or has no rows.
+ * Check products_error() for failure vs empty catalogue.
+ */
+function products(): array
+{
+    static $products = null;
+    if ($products !== null) {
+        return $products;
+    }
+
+    $GLOBALS['_products_error'] = null;
+    $fromDb = products_from_db();
+
+    if ($fromDb === null) {
+        $GLOBALS['_products_error'] = 'Error fetching products. Please try again shortly.';
+        $products = [];
+        return $products;
+    }
+
+    $products = $fromDb;
+    return $products;
+}
 
 /**
  * Resolve asset path relative to site root.

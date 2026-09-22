@@ -11,8 +11,8 @@ require __DIR__ . '/includes/header.php';
 $title = 'The Story Behind the Brush';
 $subtitle = null;
 $lede = 'A painting is really just a conversation — between the artist, the canvas, and whoever eventually stands in front of it.';
-$image = 'images/artwork/about-portrait.jpg';
-$image_alt = 'Charcoal figure study — Unsplash reference';
+$image = 'images/artwork/image-11.jpeg';
+$image_alt = 'Portrait of Lakshmi Sridhar';
 $eyebrow = 'About the Artist';
 ?>
 
@@ -24,8 +24,8 @@ $eyebrow = 'About the Artist';
             <div class="about-story__media reveal">
                 <div class="about-story__frame">
                     <?php
-                    $image = 'images/artwork/quiet-room.jpg';
-                    $image_alt = 'Pen and ink drawing — Unsplash reference';
+                    $image = 'images/artwork/image-12.jpeg';
+                    $image_alt = 'Artwork by Lakshmi Sridhar';
                     $image_loading = 'lazy';
                     include __DIR__ . '/sections/media.php';
                     ?>

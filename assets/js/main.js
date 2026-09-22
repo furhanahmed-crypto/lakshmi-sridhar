@@ -29,6 +29,89 @@
     });
   }
 
+  /* Product size toggles — event delegation, price from data-product-sizes */
+  function formatMoney(amount) {
+    var n = Number(amount);
+    if (!isFinite(n)) return "";
+    return "€" + Math.round(n).toLocaleString("en-IE");
+  }
+
+  function parseSizes(card) {
+    var raw = card.getAttribute("data-product-sizes");
+    if (!raw) return null;
+    try {
+      return JSON.parse(raw);
+    } catch (err) {
+      return null;
+    }
+  }
+
+  function applyProductSize(card, sizeKey) {
+    var sizes = parseSizes(card);
+    if (!sizes || !sizes[sizeKey]) return;
+
+    var size = sizes[sizeKey];
+    card.setAttribute("data-selected-size", sizeKey);
+
+    card.querySelectorAll("[data-size-option]").forEach(function (btn) {
+      var active = btn.getAttribute("data-size-option") === sizeKey;
+      btn.classList.toggle("is-active", active);
+      btn.setAttribute("aria-checked", active ? "true" : "false");
+    });
+
+    var priceEl = card.querySelector("[data-price]");
+    var wasEl = card.querySelector("[data-price-was]");
+    if (priceEl) priceEl.textContent = formatMoney(size.price);
+    if (wasEl) {
+      if (size.compare_at && Number(size.compare_at) > Number(size.price)) {
+        wasEl.textContent = formatMoney(size.compare_at);
+        wasEl.hidden = false;
+      } else {
+        wasEl.textContent = "";
+        wasEl.hidden = true;
+      }
+    }
+
+    var link = card.querySelector("[data-enquire-link]");
+    if (link) {
+      try {
+        var url = new URL(link.href, window.location.origin);
+        url.searchParams.set("size", sizeKey);
+        if (size.label) url.searchParams.set("size_label", size.label);
+        if (size.price != null) url.searchParams.set("price", String(size.price));
+        link.href = url.pathname + url.search;
+      } catch (err) {
+        /* ignore malformed URLs */
+      }
+    }
+  }
+
+  document.addEventListener("click", function (e) {
+    var btn = e.target.closest("[data-size-option]");
+    if (!btn) return;
+    var card = btn.closest("[data-product-card]");
+    if (!card) return;
+    e.preventDefault();
+    applyProductSize(card, btn.getAttribute("data-size-option"));
+  });
+
+  document.addEventListener("keydown", function (e) {
+    if (e.key !== "ArrowLeft" && e.key !== "ArrowRight") return;
+    var btn = e.target.closest("[data-size-option]");
+    if (!btn) return;
+    var group = btn.closest(".size-toggle");
+    if (!group) return;
+    var options = Array.prototype.slice.call(group.querySelectorAll("[data-size-option]"));
+    var index = options.indexOf(btn);
+    if (index < 0) return;
+    var next = e.key === "ArrowRight"
+      ? options[(index + 1) % options.length]
+      : options[(index - 1 + options.length) % options.length];
+    next.focus();
+    applyProductSize(btn.closest("[data-product-card]"), next.getAttribute("data-size-option"));
+    e.preventDefault();
+  });
+
   dropdownToggles.forEach(function (btn) {
     btn.addEventListener("click", function (e) {
       e.preventDefault();
@@ -144,6 +227,10 @@
     if (messageField) {
       const bits = [];
       if (artwork) bits.push("Regarding: " + artwork);
+      if (params.get("size_label") || params.get("size")) {
+        bits.push("Size: " + (params.get("size_label") || params.get("size")));
+      }
+      if (params.get("price")) bits.push("Quoted price: €" + params.get("price"));
       if (course) bits.push("Course interest: " + course);
       if (bits.length && !messageField.value) {
         messageField.value = bits.join("\n") + "\n\n";
