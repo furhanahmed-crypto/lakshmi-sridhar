@@ -24,10 +24,8 @@
       const open = !nav.classList.contains("is-open");
       nav.classList.toggle("is-open", open);
       navToggle.setAttribute("aria-expanded", String(open));
-      const iconOpen = navToggle.querySelector("[data-icon-open]");
-      const iconClose = navToggle.querySelector("[data-icon-close]");
-      if (iconOpen) iconOpen.hidden = open;
-      if (iconClose) iconClose.hidden = !open;
+      const label = navToggle.querySelector(".nav-toggle__label");
+      if (label) label.textContent = open ? "Close" : "Menu";
     });
   }
 

@@ -395,6 +395,28 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
   font-weight: 600;
 }
 
+.nav-toggle__icon {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 1em;
+  height: 1em;
+  line-height: 1;
+}
+
+.nav-toggle__icon i {
+  grid-area: 1 / 1;
+}
+
+.nav-toggle__icon [data-icon-close],
+.nav-toggle[aria-expanded="true"] .nav-toggle__icon [data-icon-open] {
+  display: none !important;
+}
+
+.nav-toggle[aria-expanded="true"] .nav-toggle__icon [data-icon-close] {
+  display: inline-block !important;
+}
+
 .site-nav {
   display: flex;
   align-items: center;

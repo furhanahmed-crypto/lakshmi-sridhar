@@ -32,10 +32,10 @@ $purchase_active = in_array($current_page ?? '', ['originals', 'prints', 'purcha
         </a>
 
         <button class="nav-toggle" type="button" aria-expanded="false" aria-controls="site-nav" data-nav-toggle>
-            <span class="nav-toggle__label">Menu</span>
+            
             <span class="nav-toggle__icon" aria-hidden="true">
                 <i class="fa-solid fa-bars" data-icon-open></i>
-                <i class="fa-solid fa-xmark" data-icon-close hidden></i>
+                <i class="fa-solid fa-xmark" data-icon-close></i>
             </span>
         </button>
 
