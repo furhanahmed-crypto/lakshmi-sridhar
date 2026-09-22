@@ -55,7 +55,10 @@ function products(): array
     $fromDb = products_from_db();
 
     if ($fromDb === null) {
-        $GLOBALS['_products_error'] = 'Error fetching products. Please try again shortly.';
+        $detail = db_last_error();
+        $debug = !empty($GLOBALS['_db_config']['debug']);
+        $GLOBALS['_products_error'] = 'Error fetching products. Please try again shortly.'
+            . ($debug && $detail ? ' ? ' . $detail : '');
         $products = [];
         return $products;
     }

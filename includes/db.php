@@ -20,8 +20,9 @@ function db(): ?PDO
         return null;
     }
 
-    /** @var array{host?:string,port?:int,name?:string,user?:string,pass?:string,charset?:string} $cfg */
+    /** @var array{host?:string,port?:int,name?:string,user?:string,pass?:string,charset?:string,debug?:bool} $cfg */
     $cfg = require $configFile;
+    $GLOBALS['_db_config'] = $cfg;
 
     $host = $cfg['host'] ?? 'localhost';
     $port = (int) ($cfg['port'] ?? 3306);
@@ -31,6 +32,7 @@ function db(): ?PDO
     $charset = $cfg['charset'] ?? 'utf8mb4';
 
     if ($name === '' || $user === '') {
+        $GLOBALS['_db_last_error'] = 'Database name or user is missing in db.local.php';
         $pdo = null;
         return null;
     }
@@ -45,9 +47,18 @@ function db(): ?PDO
         return $pdo;
     } catch (Throwable $e) {
         error_log('DB connection failed: ' . $e->getMessage());
+        $GLOBALS['_db_last_error'] = $e->getMessage();
         $pdo = null;
         return null;
     }
+}
+
+/**
+ * Last PDO connection error (for debugging).
+ */
+function db_last_error(): ?string
+{
+    return $GLOBALS['_db_last_error'] ?? null;
 }
 
 /**

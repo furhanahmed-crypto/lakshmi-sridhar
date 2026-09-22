@@ -1,0 +1,20 @@
+<?php
+/**
+ * Copy to db.local.php and fill in real values.
+ *
+ * Local Mac testing:
+ *   host = Hostinger remote MySQL hostname (from hPanel)
+ *   Enable Remote MySQL + whitelist your public IP
+ *
+ * Hostinger production:
+ *   host = localhost
+ */
+
+return [
+    'host' => 'localhost',
+    'port' => 3306,
+    'name' => 'u531995345_lakshmi',
+    'user' => 'u531995345_lakshmi_db',
+    'pass' => 'REPLACE_WITH_YOUR_PASSWORD',
+    'charset' => 'utf8mb4',
+];
