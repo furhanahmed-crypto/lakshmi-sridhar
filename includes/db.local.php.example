@@ -17,4 +17,6 @@ return [
     'user' => 'u531995345_lakshmi_db',
     'pass' => 'REPLACE_WITH_YOUR_PASSWORD',
     'charset' => 'utf8mb4',
+    'debug' => true,
+    'admin_password' => 'Lakshmi@1234',
 ];
