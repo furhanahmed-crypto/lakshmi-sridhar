@@ -58,7 +58,7 @@ $purchase_active = in_array($current_page ?? '', ['originals', 'prints', 'purcha
             </ul>
 
             <div class="site-nav__cta">
-                <a class="btn btn--ghost btn--sm" href="<?= e(WHATSAPP_URL) ?>" target="_blank" rel="noopener noreferrer">
+                <a class="btn btn--ghost btn--sm" href="<?= page_url('courses.php') ?>#class-schedule">
                     <i class="fa-brands fa-whatsapp" aria-hidden="true"></i>
                     Training Schedule
                 </a>

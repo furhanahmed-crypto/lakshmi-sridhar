@@ -16,7 +16,7 @@ require __DIR__ . '/includes/header.php';
 
 $title = 'From the Studio — Recent Work';
 $subtitle = null;
-$lede = "A look at what I've been painting lately. Each piece below is part of an ongoing series — enquire to purchase an original or order a print.";
+$lede = "A look at what I've been painting lately. Each piece below is part of an ongoing series, and many are available as originals or prints — just tap through to find out more.";
 $image = 'images/artwork/image-13.jpeg';
 $image_alt = 'Recent artwork by Lakshmi Sridhar';
 $eyebrow = 'Recent Projects';
@@ -29,15 +29,15 @@ $eyebrow = 'Recent Projects';
         <div class="container">
             <div class="section-intro reveal">
                 <p class="eyebrow">Best Sellers</p>
-                <h2 id="bestsellers-heading" class="section-title">Last six projects from the studio</h2>
-                <p class="lede">Featured pieces you can enquire to purchase or print — choose a size below.</p>
+                <h2 id="bestsellers-heading" class="section-title split-chars">Last six projects from the studio</h2>
+                <p class="lede">A grid of recent work — tap a piece to see sizes, original and print prices, and enquire.</p>
             </div>
             <?php $items = $artworks; include __DIR__ . '/sections/products-notice.php'; ?>
             <?php if ($artworks): ?>
             <div class="art-grid art-grid--shop">
                 <?php foreach ($artworks as $item): ?>
                     <?php
-                    $context = in_array('print', $item['tags'] ?? [], true) ? 'print' : 'original';
+                    $context = 'gallery';
                     $show_bestseller_badge = true;
                     include __DIR__ . '/sections/artwork-card.php';
                     ?>

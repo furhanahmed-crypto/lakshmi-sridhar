@@ -5,7 +5,7 @@
  */
 
 define('SITE_NAME', 'Lakshmi Sridhar');
-define('SITE_TAGLINE', 'Art from the Heart');
+define('SITE_TAGLINE', 'Realistic Portraits, Hand-Drawn With Heart');
 define('SITE_URL', ''); // e.g. https://lakshmisridhar.com ? leave empty for relative paths
 define('STUDIO_LOCATION', 'Celbridge, Co. Kildare, Ireland');
 define('CONTACT_PHONE', '+353 89 441 3077');
@@ -19,7 +19,8 @@ define('WHATSAPP_NUMBER', '353894413077'); // digits only for wa.me
 define('WHATSAPP_URL', 'https://wa.me/' . WHATSAPP_NUMBER);
 define('CONTACT_EMAIL', 'Lakshmi.Sridharj@gmail.com');
 
-define('ASSET_VERSION', '1.8.5');
+define('ASSET_VERSION', '2.1.4');
+define('PRINT_PRICE_RATIO', 0.5);
 
 require_once __DIR__ . '/db.php';
 
@@ -32,24 +33,101 @@ function format_money(int|float $amount): string
 }
 
 /**
- * WhatsApp enquire link with prefilled product + size message.
+ * Print price is 50% of the stored original price.
  */
-function whatsapp_enquire_url(string $title, string $sizeCode, string $sizeLabel = ''): string
+function print_price(int|float $original): float
 {
-    $inch = trim($sizeLabel !== '' ? $sizeLabel : $sizeCode);
-    $inch = str_replace(['"', '?', '?'], '', $inch);
-    if ($inch !== '' && !preg_match('/inch$/i', $inch)) {
-        $inch .= 'inch';
+    return round((float) $original * PRINT_PRICE_RATIO);
+}
+
+/**
+ * Product detail URL.
+ */
+function product_url(string $id): string
+{
+    return page_url('product.php') . '?id=' . rawurlencode($id);
+}
+
+/**
+ * Shared product-spec copy used on every details page.
+ *
+ * @return array<int, array{title: string, body: string}>
+ */
+function product_spec_sections(): array
+{
+    return [
+        [
+            'title' => 'Size and quality',
+            'body' => 'Dimension: 10 inch × 13 inch. Print quality: the artwork is printed on 300 GSM thick paper with a high quality printer and vibrant colours, to give it a rich look. Item shape: rectangular. Frame material: engineered wood.',
+        ],
+        [
+            'title' => 'Great for gifting',
+            'body' => 'These framed posters encourage everyone to live a positive life and achieve more. Their longevity and everyday use give them something to remember you by. A thoughtful gift for a girl, man, boy, student, brother, or friend — and a perfect present for loved ones, colleagues, and friends.',
+        ],
+        [
+            'title' => 'Reusable frames',
+            'body' => 'If you want to change the artwork for another poster or photo later, you can. Remove the MDF wood board and put in a new image of your choice.',
+        ],
+        [
+            'title' => 'Use wherever you want',
+            'body' => 'These stylish picture frames work as home and office decoration, and also suit hostels, study rooms, classrooms, corridors, shops, and cafés. If you can find a wall to hang them on, they will stay and say something.',
+        ],
+    ];
+}
+
+/**
+ * WhatsApp enquire link with prefilled product, type, and size.
+ */
+function whatsapp_enquire_url(string $title, string $sizeCode, string $sizeLabel = '', string $kind = ''): string
+{
+    $size = trim($sizeLabel !== '' ? $sizeLabel : $sizeCode);
+    $kind = strtolower($kind);
+
+    if ($kind === 'print') {
+        $text = sprintf(
+            'Hi Lakshmi, I would like to purchase a print of %s in size %s. Could you please confirm availability and how to proceed? Thank you.',
+            $title,
+            $size
+        );
+    } elseif ($kind === 'original') {
+        $text = sprintf(
+            'Hi Lakshmi, I would like to purchase %s as an original in size %s. Could you please confirm availability and how to proceed? Thank you.',
+            $title,
+            $size
+        );
+    } else {
+        $text = sprintf(
+            'Hi Lakshmi, I would like to purchase %s in size %s. Could you please confirm availability and how to proceed? Thank you.',
+            $title,
+            $size
+        );
     }
 
-    $text = sprintf(
-        'Hi, I want to enquire about %s. The size I prefer is %s (%s).',
-        $title,
-        $sizeCode,
-        $inch
-    );
+    return whatsapp_message_url($text);
+}
 
+/**
+ * WhatsApp link with a prefilled message.
+ */
+function whatsapp_message_url(string $text): string
+{
     return WHATSAPP_URL . '?text=' . rawurlencode($text);
+}
+
+/**
+ * Enquire about a class location and day, or the full schedule.
+ */
+function whatsapp_class_url(?string $location = null, ?string $day = null): string
+{
+    if ($location && $day) {
+        $text = "Hi Lakshmi, I would like to enquire about the {$location} class on {$day}. "
+            . "Could you please share the next available date and how to join? Thank you.";
+    } else {
+        $text = "Hi Lakshmi, I would like to enquire about your training classes. "
+            . "Could you please share the next available dates and how to join? Thank you.";
+    }
+
+    return whatsapp_message_url($text);
 }
 
 /**

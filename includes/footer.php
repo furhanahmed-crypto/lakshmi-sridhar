@@ -5,7 +5,7 @@
                 <img class="brand__logo brand__logo--footer" src="<?= asset('images/logo.png') ?>" alt="<?= e(SITE_NAME) ?>" width="180" height="52" decoding="async">
             </a>
             <p class="site-footer__note">
-                Original paintings, fine art prints, and hands-on training — created with love in Ireland.
+                Original artworks, fine art prints, and hands-on training — created in graphite, charcoal, and colour pencil in Celbridge, Ireland.
             </p>
         </div>
 

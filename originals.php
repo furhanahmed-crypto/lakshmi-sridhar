@@ -8,7 +8,7 @@ $page_description = 'One-of-a-kind original paintings by Lakshmi Sridhar — pai
 $artworks = products();
 $originals = array_values(array_filter(
     $artworks,
-    fn($a) => in_array('original', $a['tags'] ?? [], true) && ($a['status'] ?? 'available') !== 'sold'
+    fn($a) => ($a['status'] ?? 'available') !== 'sold'
 ));
 $faqs_all = require __DIR__ . '/data/faqs.php';
 

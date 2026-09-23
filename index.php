@@ -3,7 +3,7 @@ require_once __DIR__ . '/includes/config.php';
 
 $current_page = 'home';
 $page_title = 'Home';
-$page_description = 'Original paintings, fine art prints, and hands-on training by Lakshmi Sridhar — created with love in Ireland.';
+$page_description = 'Lakshmi\'s Corner of Art — realistic portraits, originals, prints, and training from Celbridge, Ireland.';
 
 $artworks = products();
 $featured = array_values(array_filter($artworks, fn($a) => !empty($a['featured']) && ($a['status'] ?? 'available') !== 'sold'));
@@ -17,12 +17,12 @@ require __DIR__ . '/includes/header.php';
     <section class="home-hero" aria-labelledby="hero-title">
         <div class="container home-hero__grid">
             <div class="home-hero__copy">
-                <p class="eyebrow reveal">Lakshmi Sridhar · Ireland</p>
-                <h1 id="hero-title" class="home-hero__title reveal">Art from the Heart — Paintings by Lakshmi</h1>
-                <p class="home-hero__subtitle reveal">Original paintings, fine art prints, and hands-on training — created with love in Ireland, inspired by a lifetime of colour, culture, and quiet observation.</p>
+                <p class="eyebrow reveal">Lakshmi Sridhar · Celbridge, Ireland</p>
+                <h1 id="hero-title" class="home-hero__title reveal split-chars">Lakshmi's Corner of Art — Realistic Portraits, Hand-Drawn With Heart</h1>
+                <p class="home-hero__subtitle reveal">Original artworks, fine art prints, and hands-on training — created in graphite, charcoal, and colour pencil from my studio in Celbridge, Ireland.</p>
                 <div class="home-hero__body reveal">
-                    <p>Welcome to my little corner of the internet. I'm Lakshmi — an artist based in Ireland, painting stories that move between memory and imagination. Every piece you see here started as a blank canvas and a feeling I couldn't quite put into words any other way.</p>
-                    <p>Whether you're here to bring home an original painting, order a print for your space, or learn to paint alongside me, I'm so glad you found your way here.</p>
+                    <p>Welcome to my little corner of the internet. I'm Lakshmi — an Indian artist based in Celbridge, Ireland, drawing human and animal portraits that capture a feeling, a moment, a story. Every piece you see here started as a blank page and an expression I couldn't quite look away from.</p>
+                    <p>Whether you're here to bring home an original artwork, order a print for your space, or learn to draw alongside me, I'm so glad you found your way here.</p>
                 </div>
                 <div class="btn-row reveal">
                     <a class="btn btn--primary" href="<?= page_url('recent-projects.php') ?>">View Recent Projects</a>
@@ -47,7 +47,7 @@ require __DIR__ . '/includes/header.php';
         <div class="container">
             <div class="section-intro section-intro--center reveal">
                 <p class="eyebrow">Begin here</p>
-                <h2 id="features-heading" class="section-title">Three ways to spend time with the work</h2>
+                <h2 id="features-heading" class="section-title split-chars">Three ways to spend time with the work</h2>
             </div>
 
             <div class="feature-grid">
@@ -82,15 +82,15 @@ require __DIR__ . '/includes/header.php';
         <div class="container">
             <div class="section-intro reveal">
                 <p class="eyebrow">From the studio</p>
-                <h2 id="featured-heading" class="section-title">A few pieces from this season</h2>
-                <p class="lede">A glimpse of recent work — enquire to purchase an original or order a print.</p>
+                <h2 id="featured-heading" class="section-title split-chars">A few pieces from this season</h2>
+                <p class="lede">A glimpse of recent work — tap a piece to see original and print prices.</p>
             </div>
 
             <?php $items = $featured; include __DIR__ . '/sections/products-notice.php'; ?>
             <?php if ($featured): ?>
             <div class="art-grid art-grid--shop">
                 <?php foreach ($featured as $item): ?>
-                    <?php $context = in_array('print', $item['tags'] ?? [], true) ? 'print' : 'original';
+                    <?php $context = 'original';
                     include __DIR__ . '/sections/artwork-card.php'; ?>
                 <?php endforeach; ?>
             </div>
@@ -109,7 +109,7 @@ require __DIR__ . '/includes/header.php';
         <div class="container connect-strip__inner">
             <div class="connect-strip__copy reveal">
                 <p class="eyebrow">Stay close</p>
-                <h2>Never miss a new painting, print release, or training date.</h2>
+                <h2 class="split-chars">Never miss a new painting, print release, or training date.</h2>
                 <p>Follow along with my process, or message me when you're ready to talk about a piece or a class.</p>
                 <div class="social-row">
                     <a class="social-link" href="<?= e(INSTAGRAM_URL) ?>" target="_blank" rel="noopener noreferrer" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>

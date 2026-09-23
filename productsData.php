@@ -1,7 +1,7 @@
 <?php
 /**
  * Product catalogue — single source of truth for shop cards.
- * Sizes: S (13"), M (15"), L (20") with per-size pricing.
+ * Sizes: A1, A2, A3. Stored original prices; prints are 50% on the site.
  */
 
 return [

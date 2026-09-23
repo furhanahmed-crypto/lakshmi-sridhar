@@ -35,21 +35,21 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'image_alt' => trim((string) ($_POST['image_alt'] ?? '')),
             'status' => ($_POST['status'] ?? 'available') === 'sold' ? 'sold' : 'available',
             'featured' => !empty($_POST['featured']),
-            'default_size' => $_POST['default_size'] ?? 'S',
+            'default_size' => $_POST['default_size'] ?? 'A1',
             'sort_order' => (int) ($_POST['sort_order'] ?? 0),
             'tags' => $tags,
             'sizes' => [
-                'S' => [
-                    'price' => $_POST['price_s'] ?? 0,
-                    'compare_at' => $_POST['compare_s'] ?? '',
+                'A1' => [
+                    'price' => $_POST['price_a1'] ?? 0,
+                    'compare_at' => $_POST['compare_a1'] ?? '',
                 ],
-                'M' => [
-                    'price' => $_POST['price_m'] ?? 0,
-                    'compare_at' => $_POST['compare_m'] ?? '',
+                'A2' => [
+                    'price' => $_POST['price_a2'] ?? 0,
+                    'compare_at' => $_POST['compare_a2'] ?? '',
                 ],
-                'L' => [
-                    'price' => $_POST['price_l'] ?? 0,
-                    'compare_at' => $_POST['compare_l'] ?? '',
+                'A3' => [
+                    'price' => $_POST['price_a3'] ?? 0,
+                    'compare_at' => $_POST['compare_a3'] ?? '',
                 ],
             ],
         ];
@@ -71,13 +71,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'image_alt' => trim((string) ($_POST['image_alt'] ?? '')),
         'status' => ($_POST['status'] ?? 'available') === 'sold' ? 'sold' : 'available',
         'featured' => !empty($_POST['featured']),
-        'default_size' => $_POST['default_size'] ?? 'S',
+        'default_size' => $_POST['default_size'] ?? 'A1',
         'sort_order' => (int) ($_POST['sort_order'] ?? 0),
         'tags' => $tags,
         'sizes' => [
-            'S' => ['label' => '13"', 'price' => (float) ($_POST['price_s'] ?? 0), 'compare_at' => ($_POST['compare_s'] ?? '') !== '' ? (float) $_POST['compare_s'] : null],
-            'M' => ['label' => '15"', 'price' => (float) ($_POST['price_m'] ?? 0), 'compare_at' => ($_POST['compare_m'] ?? '') !== '' ? (float) $_POST['compare_m'] : null],
-            'L' => ['label' => '20"', 'price' => (float) ($_POST['price_l'] ?? 0), 'compare_at' => ($_POST['compare_l'] ?? '') !== '' ? (float) $_POST['compare_l'] : null],
+            'A1' => ['label' => 'A1', 'price' => (float) ($_POST['price_a1'] ?? 0), 'compare_at' => ($_POST['compare_a1'] ?? '') !== '' ? (float) $_POST['compare_a1'] : null],
+            'A2' => ['label' => 'A2', 'price' => (float) ($_POST['price_a2'] ?? 0), 'compare_at' => ($_POST['compare_a2'] ?? '') !== '' ? (float) $_POST['compare_a2'] : null],
+            'A3' => ['label' => 'A3', 'price' => (float) ($_POST['price_a3'] ?? 0), 'compare_at' => ($_POST['compare_a3'] ?? '') !== '' ? (float) $_POST['compare_a3'] : null],
         ],
     ]);
 }
@@ -88,20 +88,20 @@ $product = $product ?? [
     'image_alt' => '',
     'status' => 'available',
     'featured' => false,
-    'default_size' => 'S',
+    'default_size' => 'A1',
     'sort_order' => 0,
     'tags' => ['original', 'print'],
     'sizes' => [
-        'S' => ['label' => '13"', 'price' => 89, 'compare_at' => 129],
-        'M' => ['label' => '15"', 'price' => 119, 'compare_at' => 159],
-        'L' => ['label' => '20"', 'price' => 149, 'compare_at' => 199],
+        'A1' => ['label' => 'A1', 'price' => 89, 'compare_at' => 129],
+        'A2' => ['label' => 'A2', 'price' => 119, 'compare_at' => 159],
+        'A3' => ['label' => 'A3', 'price' => 149, 'compare_at' => 199],
     ],
 ];
 
 $tags = $product['tags'] ?? [];
-$s = $product['sizes']['S'] ?? ['price' => 0, 'compare_at' => null];
-$m = $product['sizes']['M'] ?? ['price' => 0, 'compare_at' => null];
-$l = $product['sizes']['L'] ?? ['price' => 0, 'compare_at' => null];
+$a1 = $product['sizes']['A1'] ?? $product['sizes']['S'] ?? ['price' => 0, 'compare_at' => null];
+$a2 = $product['sizes']['A2'] ?? $product['sizes']['M'] ?? ['price' => 0, 'compare_at' => null];
+$a3 = $product['sizes']['A3'] ?? $product['sizes']['L'] ?? ['price' => 0, 'compare_at' => null];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -175,8 +175,8 @@ $l = $product['sizes']['L'] ?? ['price' => 0, 'compare_at' => null];
                     <div class="field">
                         <label for="default_size">Default size</label>
                         <select id="default_size" name="default_size">
-                            <?php foreach (['S', 'M', 'L'] as $code): ?>
-                                <option value="<?= $code ?>" <?= ($product['default_size'] ?? 'S') === $code ? 'selected' : '' ?>><?= $code ?></option>
+                            <?php foreach (['A1', 'A2', 'A3'] as $code): ?>
+                                <option value="<?= $code ?>" <?= ($product['default_size'] ?? 'A1') === $code ? 'selected' : '' ?>><?= $code ?></option>
                             <?php endforeach; ?>
                         </select>
                     </div>
@@ -192,13 +192,13 @@ $l = $product['sizes']['L'] ?? ['price' => 0, 'compare_at' => null];
                 </div>
 
                 <div class="field" style="margin-bottom:0;">
-                    <label>Size prices</label>
+                    <label>Original size prices (print is 50% of these)</label>
                     <div class="sizes-grid">
                         <?php
                         $sizeFields = [
-                            'S' => [$s, 'price_s', 'compare_s'],
-                            'M' => [$m, 'price_m', 'compare_m'],
-                            'L' => [$l, 'price_l', 'compare_l'],
+                            'A1' => [$a1, 'price_a1', 'compare_a1'],
+                            'A2' => [$a2, 'price_a2', 'compare_a2'],
+                            'A3' => [$a3, 'price_a3', 'compare_a3'],
                         ];
                         foreach ($sizeFields as $code => [$size, $priceName, $compareName]):
                         ?>

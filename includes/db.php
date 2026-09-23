@@ -92,7 +92,7 @@ function products_from_db(bool $includeAll = false): ?array
             'SELECT size_code, label, price, compare_at
              FROM product_sizes
              WHERE product_id = ?
-             ORDER BY FIELD(size_code, \'S\', \'M\', \'L\'), size_code ASC'
+             ORDER BY FIELD(size_code, \'S\', \'A1\', \'M\', \'A2\', \'L\', \'A3\'), size_code ASC'
         );
 
         $products = [];
@@ -109,6 +109,29 @@ function products_from_db(bool $includeAll = false): ?array
 }
 
 /**
+ * Store codes stay S/M/L (CHAR(1) in MySQL). Public / admin UI uses A1/A2/A3.
+ */
+function size_display_code(string $code): string
+{
+    return match (strtoupper($code)) {
+        'S', 'A1' => 'A1',
+        'M', 'A2' => 'A2',
+        'L', 'A3' => 'A3',
+        default => 'A1',
+    };
+}
+
+function size_store_code(string $code): string
+{
+    return match (strtoupper($code)) {
+        'A1', 'S' => 'S',
+        'A2', 'M' => 'M',
+        'A3', 'L' => 'L',
+        default => 'S',
+    };
+}
+
+/**
  * @param array<string, mixed> $row
  * @return array<string, mixed>
  */
@@ -118,11 +141,19 @@ function map_product_row(array $row, PDOStatement $sizeStmt): array
     $sizeRows = $sizeStmt->fetchAll();
     $sizes = [];
     foreach ($sizeRows as $s) {
-        $sizes[$s['size_code']] = [
-            'label' => $s['label'],
+        $display = size_display_code((string) $s['size_code']);
+        $sizes[$display] = [
+            'label' => $display,
             'price' => (float) $s['price'],
             'compare_at' => $s['compare_at'] !== null ? (float) $s['compare_at'] : null,
         ];
+    }
+
+    $ordered = [];
+    foreach (['A1', 'A2', 'A3'] as $code) {
+        if (isset($sizes[$code])) {
+            $ordered[$code] = $sizes[$code];
+        }
     }
 
     $tags = $row['tags'];
@@ -142,9 +173,9 @@ function map_product_row(array $row, PDOStatement $sizeStmt): array
         'tags' => $tags,
         'status' => $row['status'],
         'featured' => (bool) $row['featured'],
-        'default_size' => $row['default_size'] ?: 'S',
+        'default_size' => size_display_code((string) ($row['default_size'] ?: 'S')),
         'sort_order' => (int) ($row['sort_order'] ?? 0),
-        'sizes' => $sizes,
+        'sizes' => $ordered,
     ];
 }
 
@@ -169,7 +200,7 @@ function product_by_id(string $id): ?array
         $sizeStmt = $pdo->prepare(
             'SELECT size_code, label, price, compare_at
              FROM product_sizes WHERE product_id = ?
-             ORDER BY FIELD(size_code, \'S\', \'M\', \'L\'), size_code ASC'
+             ORDER BY FIELD(size_code, \'S\', \'A1\', \'M\', \'A2\', \'L\', \'A3\'), size_code ASC'
         );
 
         return map_product_row($row, $sizeStmt);
@@ -271,7 +302,7 @@ function product_upload_image(?array $file, string $productIdHint = 'product'): 
 }
 
 /**
- * Insert or update a product and its S/M/L sizes.
+ * Insert or update a product and its A1/A2/A3 sizes (stored as S/M/L).
  *
  * @param array<string, mixed> $data
  * @return string|null product id on success
@@ -302,9 +333,7 @@ function product_save(array $data, bool $isNew = false): ?string
     $imageAlt = trim((string) ($data['image_alt'] ?? $title));
     $status = ($data['status'] ?? 'available') === 'sold' ? 'sold' : 'available';
     $featured = !empty($data['featured']) ? 1 : 0;
-    $defaultSize = in_array(($data['default_size'] ?? 'S'), ['S', 'M', 'L'], true)
-        ? $data['default_size']
-        : 'S';
+    $defaultSize = size_store_code((string) ($data['default_size'] ?? 'A1'));
     $sortOrder = (int) ($data['sort_order'] ?? 0);
 
     $tags = $data['tags'] ?? [];
@@ -315,9 +344,9 @@ function product_save(array $data, bool $isNew = false): ?string
     $tagsJson = json_encode($tags, JSON_UNESCAPED_UNICODE);
 
     $sizeMeta = [
-        'S' => '13"',
-        'M' => '15"',
-        'L' => '20"',
+        'S' => 'A1',
+        'M' => 'A2',
+        'L' => 'A3',
     ];
     $sizesIn = is_array($data['sizes'] ?? null) ? $data['sizes'] : [];
 
@@ -372,12 +401,13 @@ function product_save(array $data, bool $isNew = false): ?string
              ON DUPLICATE KEY UPDATE label = VALUES(label), price = VALUES(price), compare_at = VALUES(compare_at)'
         );
 
-        foreach ($sizeMeta as $code => $label) {
-            $price = isset($sizesIn[$code]['price']) ? (float) $sizesIn[$code]['price'] : 0;
-            $compare = isset($sizesIn[$code]['compare_at']) && $sizesIn[$code]['compare_at'] !== ''
-                ? (float) $sizesIn[$code]['compare_at']
+        foreach ($sizeMeta as $storeCode => $display) {
+            $row = $sizesIn[$display] ?? $sizesIn[$storeCode] ?? [];
+            $price = isset($row['price']) ? (float) $row['price'] : 0;
+            $compare = isset($row['compare_at']) && $row['compare_at'] !== ''
+                ? (float) $row['compare_at']
                 : null;
-            $upsertSize->execute([$id, $code, $label, $price, $compare]);
+            $upsertSize->execute([$id, $storeCode, $display, $price, $compare]);
         }
 
         $pdo->commit();

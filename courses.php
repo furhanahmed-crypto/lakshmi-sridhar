@@ -5,7 +5,6 @@ $current_page = 'courses';
 $page_title = 'Courses Running';
 $page_description = 'Learn to paint with Lakshmi Sridhar — beginner-friendly training sessions in Ireland and online.';
 
-$courses = require __DIR__ . '/data/courses.php';
 $faqs = require __DIR__ . '/data/faqs.php';
 
 require __DIR__ . '/includes/head.php';
@@ -22,21 +21,7 @@ $eyebrow = 'Courses Running';
 <main id="main">
     <?php include __DIR__ . '/sections/page-hero.php'; ?>
 
-    <section class="section" aria-labelledby="courses-heading">
-        <div class="container">
-            <div class="section-intro reveal">
-                <p class="eyebrow">This season</p>
-                <h2 id="courses-heading" class="section-title">Training sessions</h2>
-                <p class="lede">Browse the courses below and register your interest — I'll follow up with dates, materials, and everything you need to begin.</p>
-            </div>
-
-            <div class="course-grid">
-                <?php foreach ($courses as $course): ?>
-                    <?php include __DIR__ . '/sections/course-card.php'; ?>
-                <?php endforeach; ?>
-            </div>
-        </div>
-    </section>
+    <?php include __DIR__ . '/sections/class-schedule.php'; ?>
 
     <?php include __DIR__ . '/sections/whatsapp-cta.php'; ?>
 
@@ -44,8 +29,8 @@ $eyebrow = 'Courses Running';
         <div class="container">
             <div class="section-intro reveal">
                 <p class="eyebrow">From the studio table</p>
-                <h2 id="testimonials-heading" class="section-title">What past students say</h2>
-                <p class="lede">Space for 2—3 short quotes from students once available.</p>
+                <h2 id="testimonials-heading" class="section-title split-chars">What past students say</h2>
+                <p class="lede">A little space for voices from the studio table — quotes will appear here as classes unfold.</p>
             </div>
             <div class="testimonial-grid">
                 <article class="testimonial reveal">

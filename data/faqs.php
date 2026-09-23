@@ -1,6 +1,6 @@
 <?php
 /**
- * FAQ content drawn from the website content document.
+ * FAQ content from the website content document, with confirmed details filled in.
  */
 
 return [
@@ -15,7 +15,7 @@ return [
         ],
         [
             'q' => 'Are sessions held online or in person?',
-            'a' => '[Insert real answer — Ireland-based in-person, online via video call, or both.]',
+            'a' => 'Sessions are held in person from Celbridge, Ireland. Message me on WhatsApp for the latest format and dates.',
         ],
         [
             'q' => 'How do I find out about the next available dates?',
@@ -29,7 +29,7 @@ return [
         ],
         [
             'q' => 'Do you ship internationally?',
-            'a' => 'Yes — I ship worldwide. Shipping costs and timelines are shared with you at the time of purchase. [Adjust once real shipping policy is confirmed.]',
+            'a' => 'Yes — I ship worldwide. Shipping costs and timelines are shared with you at the time of purchase.',
         ],
         [
             'q' => 'Can I request a custom piece?',
@@ -47,19 +47,19 @@ return [
         ],
         [
             'q' => 'Are the prints signed?',
-            'a' => '[Insert real answer — e.g., "Yes, every print is hand-signed" or "Prints are unsigned; only originals are hand-signed."]',
+            'a' => 'Originals are always hand-signed. Prints are high-quality reproductions of the artwork; ask when you enquire if you would like a signed print.',
         ],
         [
             'q' => 'Are prints framed?',
-            'a' => 'Prints are sold unframed, so you can choose a frame that suits your own space.',
+            'a' => 'Prints are supplied on 300 GSM paper in a reusable engineered-wood frame, so they are ready to hang.',
         ],
         [
             'q' => 'Do you ship prints internationally?',
-            'a' => 'Yes, prints are shipped worldwide. [Adjust with real shipping zones/costs once confirmed.]',
+            'a' => 'Yes, prints are shipped worldwide. Shipping costs and timelines are shared at the time of purchase.',
         ],
         [
             'q' => 'What sizes are available?',
-            'a' => '[List actual size options once confirmed — A4, A3, custom sizes, etc.]',
+            'a' => 'Prints and originals are offered in A1, A2, and A3. Choose a size on the artwork details page.',
         ],
     ],
 ];

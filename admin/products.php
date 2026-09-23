@@ -51,18 +51,18 @@ unset($_SESSION['admin_flash']);
                             <tr>
                                 <th></th>
                                 <th>Product</th>
-                                <th>S</th>
-                                <th>M</th>
-                                <th>L</th>
+                                <th>A1</th>
+                                <th>A2</th>
+                                <th>A3</th>
                                 <th></th>
                             </tr>
                         </thead>
                         <tbody>
                             <?php foreach ($products as $item): ?>
                                 <?php
-                                $s = $item['sizes']['S'] ?? ['price' => 0, 'compare_at' => null];
-                                $m = $item['sizes']['M'] ?? ['price' => 0, 'compare_at' => null];
-                                $l = $item['sizes']['L'] ?? ['price' => 0, 'compare_at' => null];
+                                $s = $item['sizes']['A1'] ?? $item['sizes']['S'] ?? ['price' => 0, 'compare_at' => null];
+                                $m = $item['sizes']['A2'] ?? $item['sizes']['M'] ?? ['price' => 0, 'compare_at' => null];
+                                $l = $item['sizes']['A3'] ?? $item['sizes']['L'] ?? ['price' => 0, 'compare_at' => null];
                                 ?>
                                 <tr>
                                     <td>

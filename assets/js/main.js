@@ -51,6 +51,8 @@
     if (!sizes || !sizes[sizeKey]) return;
 
     var size = sizes[sizeKey];
+    var originalPrice = Number(size.price) || 0;
+    var printAmount = Math.round(originalPrice * 0.5);
     card.setAttribute("data-selected-size", sizeKey);
 
     card.querySelectorAll("[data-size-option]").forEach(function (btn) {
@@ -61,9 +63,13 @@
 
     var priceEl = card.querySelector("[data-price]");
     var wasEl = card.querySelector("[data-price-was]");
-    if (priceEl) priceEl.textContent = formatMoney(size.price);
+    var originalEl = card.querySelector("[data-price-original]");
+    var printEl = card.querySelector("[data-price-print]");
+    if (priceEl) priceEl.textContent = formatMoney(originalPrice);
+    if (originalEl) originalEl.textContent = formatMoney(originalPrice);
+    if (printEl) printEl.textContent = formatMoney(printAmount);
     if (wasEl) {
-      if (size.compare_at && Number(size.compare_at) > Number(size.price)) {
+      if (size.compare_at && Number(size.compare_at) > originalPrice) {
         wasEl.textContent = formatMoney(size.compare_at);
         wasEl.hidden = false;
       } else {
@@ -72,25 +78,37 @@
       }
     }
 
-    var link = card.querySelector("[data-enquire-link]");
-    if (link) {
-      var title = card.getAttribute("data-product-title") || "this artwork";
-      var base = card.getAttribute("data-whatsapp-base") || "";
-      var label = size.label || sizeKey;
-      var inch = String(label).replace(/["″”]/g, "");
-      if (inch && !/inch$/i.test(inch)) inch += "inch";
-      var text =
-        "Hi, I want to enquire about " +
-        title +
-        ". The size I prefer is " +
-        sizeKey +
-        " (" +
-        inch +
-        ").";
-      if (base) {
-        link.href = base + "?text=" + encodeURIComponent(text);
+    var title = card.getAttribute("data-product-title") || "this artwork";
+    var base = card.getAttribute("data-whatsapp-base") || "";
+    var label = size.label || sizeKey;
+    card.querySelectorAll("[data-enquire-link]").forEach(function (link) {
+      if (!base) return;
+      var kind = link.getAttribute("data-enquire-type") || "";
+      var text;
+      if (kind === "print") {
+        text =
+          "Hi Lakshmi, I would like to purchase a print of " +
+          title +
+          " in size " +
+          label +
+          ". Could you please confirm availability and how to proceed? Thank you.";
+      } else if (kind === "original") {
+        text =
+          "Hi Lakshmi, I would like to purchase " +
+          title +
+          " as an original in size " +
+          label +
+          ". Could you please confirm availability and how to proceed? Thank you.";
+      } else {
+        text =
+          "Hi Lakshmi, I would like to purchase " +
+          title +
+          " in size " +
+          label +
+          ". Could you please confirm availability and how to proceed? Thank you.";
       }
-    }
+      link.href = base + "?text=" + encodeURIComponent(text);
+    });
   }
 
   document.addEventListener("click", function (e) {

@@ -17,7 +17,7 @@ $show_media = $show_media ?? (!empty($image) || !empty($placeholder_label));
     <div class="container page-hero__grid">
         <div class="page-hero__copy">
             <p class="eyebrow reveal"><?= e($eyebrow ?? SITE_NAME) ?></p>
-            <h1 class="page-hero__title reveal"><?= e($title) ?></h1>
+            <h1 class="page-hero__title reveal split-chars"><?= e($title) ?></h1>
             <?php if (!empty($subtitle)): ?>
                 <p class="page-hero__subtitle reveal"><?= e($subtitle) ?></p>
             <?php endif; ?>

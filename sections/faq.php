@@ -10,7 +10,7 @@ $heading = $heading ?? 'FAQs';
     <div class="container narrow">
         <div class="section-intro reveal">
             <p class="eyebrow">Questions</p>
-            <h2 id="faq-heading" class="section-title"><?= e($heading) ?></h2>
+            <h2 id="faq-heading" class="section-title split-chars"><?= e($heading) ?></h2>
         </div>
 
         <div class="faq-list" data-faq>

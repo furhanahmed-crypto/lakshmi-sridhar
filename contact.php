@@ -85,7 +85,7 @@ $eyebrow = 'Contact Us';
                     </li>
                     <li>
                         <i class="fa-solid fa-location-dot" aria-hidden="true"></i>
-                        <span><?= e(STUDIO_LOCATION) ?></span>
+                        <span>Based in <?= e(STUDIO_LOCATION) ?>.</span>
                     </li>
                 </ul>
 
