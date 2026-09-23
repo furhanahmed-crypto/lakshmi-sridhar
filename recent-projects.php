@@ -6,7 +6,10 @@ $page_title = 'Recent Projects';
 $page_description = 'From the studio — recent paintings and series by Lakshmi Sridhar, available as originals or prints.';
 
 $artworks = products();
-$artworks = array_values(array_filter($artworks, fn($a) => ($a['status'] ?? 'available') !== 'sold'));
+$available = array_values(array_filter($artworks, fn($a) => ($a['status'] ?? 'available') !== 'sold'));
+$featured = array_values(array_filter($available, fn($a) => !empty($a['featured'])));
+$rest = array_values(array_filter($available, fn($a) => empty($a['featured'])));
+$artworks = array_slice(array_merge($featured, $rest), 0, 6);
 
 require __DIR__ . '/includes/head.php';
 require __DIR__ . '/includes/header.php';
@@ -22,13 +25,22 @@ $eyebrow = 'Recent Projects';
 <main id="main">
     <?php include __DIR__ . '/sections/page-hero.php'; ?>
 
-    <section class="section" aria-label="Recent artwork">
+    <section class="section" aria-labelledby="bestsellers-heading">
         <div class="container">
+            <div class="section-intro reveal">
+                <p class="eyebrow">Best Sellers</p>
+                <h2 id="bestsellers-heading" class="section-title">Last six projects from the studio</h2>
+                <p class="lede">Featured pieces you can enquire to purchase or print — choose a size below.</p>
+            </div>
             <?php $items = $artworks; include __DIR__ . '/sections/products-notice.php'; ?>
             <?php if ($artworks): ?>
             <div class="art-grid art-grid--shop">
                 <?php foreach ($artworks as $item): ?>
-                    <?php $context = in_array('print', $item['tags'] ?? [], true) ? 'print' : 'original'; include __DIR__ . '/sections/artwork-card.php'; ?>
+                    <?php
+                    $context = in_array('print', $item['tags'] ?? [], true) ? 'print' : 'original';
+                    $show_bestseller_badge = true;
+                    include __DIR__ . '/sections/artwork-card.php';
+                    ?>
                 <?php endforeach; ?>
             </div>
             <?php endif; ?>

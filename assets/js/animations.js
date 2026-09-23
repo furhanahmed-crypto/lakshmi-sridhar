@@ -103,6 +103,7 @@
 
   /* Image parallax — stronger travel, still premium/smooth */
   gsap.utils.toArray("[data-parallax-img]").forEach(function (img) {
+    if (img.closest(".art-card--product, .art-grid--shop")) return;
     const frame = img.parentElement;
     if (!frame) return;
 

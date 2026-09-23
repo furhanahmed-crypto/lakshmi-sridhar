@@ -24,6 +24,7 @@ $default_size = $item['default_size'] ?? 'S';
 $active_key = isset($sizes[$default_size]) ? $default_size : array_key_first($sizes);
 $active = ($active_key !== null && isset($sizes[$active_key])) ? $sizes[$active_key] : null;
 
+$show_bestseller_badge = !empty($show_bestseller_badge);
 $enquire_label = $context === 'original' ? 'Enquire to Purchase' : 'Enquire to Print';
 $enquire_href = whatsapp_enquire_url(
     (string) ($item['title'] ?? 'this artwork'),
@@ -45,6 +46,9 @@ $enquire_href = whatsapp_enquire_url(
     id="<?= e($item['id'] ?? '') ?>"
 >
     <div class="art-card__media">
+        <?php if ($show_bestseller_badge && !empty($item['featured'])): ?>
+            <span class="art-card__badge">Best Seller</span>
+        <?php endif; ?>
         <div class="art-card__frame">
             <?php include __DIR__ . '/media.php'; ?>
         </div>
