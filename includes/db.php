@@ -326,9 +326,9 @@ function product_save(array $data, bool $isNew = false): ?string
     }
 
     $description = trim((string) ($data['description'] ?? ''));
-    $image = trim((string) ($data['image'] ?? 'images/artwork/image-1.jpeg'));
+    $image = trim((string) ($data['image'] ?? 'images/artwork/krishna-petals.jpeg'));
     if ($image === '') {
-        $image = 'images/artwork/image-1.jpeg';
+        $image = 'images/artwork/krishna-petals.jpeg';
     }
     $imageAlt = trim((string) ($data['image_alt'] ?? $title));
     $status = ($data['status'] ?? 'available') === 'sold' ? 'sold' : 'available';
@@ -340,7 +340,8 @@ function product_save(array $data, bool $isNew = false): ?string
     if (!is_array($tags)) {
         $tags = [];
     }
-    $tags = array_values(array_intersect($tags, ['original', 'print']));
+    $allowedTags = array_merge(['original', 'print'], array_keys(shop_categories()));
+    $tags = array_values(array_intersect($tags, $allowedTags));
     $tagsJson = json_encode($tags, JSON_UNESCAPED_UNICODE);
 
     $sizeMeta = [
@@ -419,6 +420,128 @@ function product_save(array $data, bool $isNew = false): ?string
         error_log('product_save failed: ' . $e->getMessage());
         $GLOBALS['_db_last_error'] = $e->getMessage();
         return null;
+    }
+}
+
+function product_details_ensure_table(): bool
+{
+    $pdo = db();
+    if (!$pdo) {
+        return false;
+    }
+
+    try {
+        $old = $pdo->query("SHOW TABLES LIKE 'product_detail_sections'")->fetchColumn();
+        $new = $pdo->query("SHOW TABLES LIKE 'product_common_details'")->fetchColumn();
+        if ($old && !$new) {
+            $pdo->exec('RENAME TABLE product_detail_sections TO product_common_details');
+        }
+
+        $pdo->exec(
+            'CREATE TABLE IF NOT EXISTS product_common_details (
+                id TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
+                heading VARCHAR(160) NOT NULL,
+                body TEXT NOT NULL,
+                sort_order TINYINT UNSIGNED NOT NULL DEFAULT 0,
+                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+                PRIMARY KEY (id)
+            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
+        );
+
+        return true;
+    } catch (Throwable $e) {
+        error_log('product_details_ensure_table failed: ' . $e->getMessage());
+        $GLOBALS['_db_last_error'] = $e->getMessage();
+        return false;
+    }
+}
+
+/**
+ * @return array<int, array{id:int, title:string, body:string}>
+ */
+function product_details_from_db(): array
+{
+    if (!product_details_ensure_table()) {
+        return [];
+    }
+
+    $pdo = db();
+    if (!$pdo) {
+        return [];
+    }
+
+    try {
+        $rows = $pdo->query(
+            'SELECT id, heading, body FROM product_common_details ORDER BY sort_order ASC, id ASC'
+        )->fetchAll();
+
+        $sections = [];
+        foreach ($rows as $row) {
+            $title = trim((string) $row['heading']);
+            $body = trim((string) $row['body']);
+            if ($title === '' && $body === '') {
+                continue;
+            }
+            $sections[] = [
+                'id' => (int) $row['id'],
+                'title' => $title,
+                'body' => $body,
+            ];
+        }
+
+        return $sections;
+    } catch (Throwable $e) {
+        error_log('product_details_from_db failed: ' . $e->getMessage());
+        $GLOBALS['_db_last_error'] = $e->getMessage();
+        return [];
+    }
+}
+
+/**
+ * @param array<int, array{id?:int|string, title?:string, body?:string}> $sections
+ */
+function product_details_save(array $sections): bool
+{
+    if (!product_details_ensure_table()) {
+        return false;
+    }
+
+    $pdo = db();
+    if (!$pdo) {
+        return false;
+    }
+
+    try {
+        $pdo->beginTransaction();
+        $upd = $pdo->prepare(
+            'UPDATE product_common_details SET heading = ?, body = ?, sort_order = ? WHERE id = ?'
+        );
+        $ins = $pdo->prepare(
+            'INSERT INTO product_common_details (heading, body, sort_order) VALUES (?, ?, ?)'
+        );
+
+        foreach (array_values($sections) as $i => $section) {
+            $id = (int) ($section['id'] ?? 0);
+            $title = trim((string) ($section['title'] ?? ''));
+            $body = trim((string) ($section['body'] ?? ''));
+            $order = $i + 1;
+
+            if ($id > 0) {
+                $upd->execute([$title, $body, $order, $id]);
+            } elseif ($title !== '' || $body !== '') {
+                $ins->execute([$title, $body, $order]);
+            }
+        }
+
+        $pdo->commit();
+        return true;
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('product_details_save failed: ' . $e->getMessage());
+        $GLOBALS['_db_last_error'] = $e->getMessage();
+        return false;
     }
 }
 

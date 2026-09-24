@@ -17,6 +17,9 @@
                 <li><a href="<?= page_url('courses.php') ?>">Courses Running</a></li>
                 <li><a href="<?= page_url('originals.php') ?>">Originals</a></li>
                 <li><a href="<?= page_url('prints.php') ?>">Prints</a></li>
+                <?php foreach (shop_categories() as $cat): ?>
+                    <li><a href="<?= page_url($cat['page']) ?>"><?= e($cat['label']) ?></a></li>
+                <?php endforeach; ?>
                 <li><a href="<?= page_url('contact.php') ?>">Contact Us</a></li>
             </ul>
         </div>

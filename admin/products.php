@@ -20,16 +20,12 @@ unset($_SESSION['admin_flash']);
     <link rel="stylesheet" href="admin.css?v=<?= ASSET_VERSION ?>">
 </head>
 <body class="admin">
+    <?php $admin_nav = 'products'; include __DIR__ . '/header.php'; ?>
     <div class="admin-shell">
         <div class="admin-top">
             <div>
                 <h1>Products</h1>
                 <p><?= count($products) ?> item<?= count($products) === 1 ? '' : 's' ?> in the catalogue</p>
-            </div>
-            <div class="admin-actions">
-                <a class="btn btn--primary" href="edit.php">Add product</a>
-                <a class="btn btn--ghost" href="<?= page_url('index.php') ?>" target="_blank" rel="noopener">View site</a>
-                <a class="btn btn--ghost" href="logout.php">Log out</a>
             </div>
         </div>
 

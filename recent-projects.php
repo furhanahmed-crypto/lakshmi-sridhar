@@ -17,18 +17,18 @@ require __DIR__ . '/includes/header.php';
 $title = 'From the Studio — Recent Work';
 $subtitle = null;
 $lede = "A look at what I've been painting lately. Each piece below is part of an ongoing series, and many are available as originals or prints — just tap through to find out more.";
-$image = 'images/artwork/image-13.jpeg';
+$image = 'images/artwork/lion-family.jpeg';
 $image_alt = 'Recent artwork by Lakshmi Sridhar';
 $eyebrow = 'Recent Projects';
 ?>
 
 <main id="main">
-    <?php include __DIR__ . '/sections/page-hero.php'; ?>
+    <!-- <?php include __DIR__ . '/sections/page-hero.php'; ?> -->
 
     <section class="section" aria-labelledby="bestsellers-heading">
         <div class="container">
             <div class="section-intro reveal">
-                <p class="eyebrow">Best Sellers</p>
+                <p class="eyebrow">Recent Projects</p>
                 <h2 id="bestsellers-heading" class="section-title split-chars">Last six projects from the studio</h2>
                 <p class="lede">A grid of recent work — tap a piece to see sizes, original and print prices, and enquire.</p>
             </div>

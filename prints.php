@@ -18,7 +18,7 @@ require __DIR__ . '/includes/header.php';
 $title = 'Fine Art Prints';
 $subtitle = 'A beautiful, accessible way to bring a piece home.';
 $lede = 'For those who love a piece but want a more accessible way to bring it home, my prints are a beautiful alternative — carefully reproduced to stay true to the colour and detail of the original, at half the original price.';
-$image = 'images/artwork/image-15.jpeg';
+$image = 'images/artwork/mother-and-calf.jpeg';
 $image_alt = 'Fine art print by Lakshmi Sridhar';
 $eyebrow = 'Purchase';
 ?>

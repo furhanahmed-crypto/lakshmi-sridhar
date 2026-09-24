@@ -14,12 +14,12 @@ define('CONTACT_PHONE_TEL', '+353894413077');
 // Social & contact ? replace placeholders before publishing
 define('INSTAGRAM_HANDLE', 'lakshmi.sridharj');
 define('INSTAGRAM_URL', 'https://www.instagram.com/lakshmi.sridharj/');
-define('FACEBOOK_URL', 'https://www.facebook.com/'); // [Add Facebook URL if applicable]
+define('FACEBOOK_URL', 'https://www.facebook.com/share/1JgyPWgbio/');
 define('WHATSAPP_NUMBER', '353894413077'); // digits only for wa.me
 define('WHATSAPP_URL', 'https://wa.me/' . WHATSAPP_NUMBER);
 define('CONTACT_EMAIL', 'Lakshmi.Sridharj@gmail.com');
 
-define('ASSET_VERSION', '2.1.4');
+define('ASSET_VERSION', '2.1.8');
 define('PRINT_PRICE_RATIO', 0.5);
 
 require_once __DIR__ . '/db.php';
@@ -49,30 +49,70 @@ function product_url(string $id): string
 }
 
 /**
- * Shared product-spec copy used on every details page.
+ * Purchase collections (folder slug → page).
  *
- * @return array<int, array{title: string, body: string}>
+ * @return array<string, array{label:string, page:string, folder:string, description:string, lede:string, image:string}>
+ */
+function shop_categories(): array
+{
+    return [
+        'animals' => [
+            'label' => 'Animals',
+            'page' => 'animals.php',
+            'folder' => 'animals',
+            'description' => 'Hand-drawn animal portraits and studies by Lakshmi Sridhar.',
+            'lede' => 'Realistic animal studies from the studio — drawn in graphite, charcoal, and colour pencil.',
+            'image' => 'images/artwork/animals/lion.jpeg',
+        ],
+        'still-life' => [
+            'label' => 'Still Life',
+            'page' => 'still-life.php',
+            'folder' => 'still-life',
+            'description' => 'Still-life drawings and colour studies by Lakshmi Sridhar.',
+            'lede' => 'Quiet studies of fruit, objects, and everyday forms — observed slowly in colour and light.',
+            'image' => 'images/artwork/still-life/apples.jpeg',
+        ],
+        'portraits' => [
+            'label' => 'Portraits',
+            'page' => 'portraits.php',
+            'folder' => 'portraits',
+            'description' => 'Hand-drawn portraits by Lakshmi Sridhar.',
+            'lede' => 'Human portraits that hold a feeling, a moment, and a story — drawn by hand from the studio.',
+            'image' => 'images/artwork/portraits/old-man-1.jpeg',
+        ],
+        'students-christmas' => [
+            'label' => "Students' Christmas",
+            'page' => 'students-christmas.php',
+            'folder' => 'students-christmas-cards-2026',
+            'description' => "Students' Christmas cards 2026 — artwork from Lakshmi's classes.",
+            'lede' => 'A festive collection from the 2026 student Christmas cards — tap a piece for sizes and to buy as an original or a print.',
+            'image' => 'images/artwork/students-christmas-cards-2026/parrot-1.jpeg',
+        ],
+    ];
+}
+
+/**
+ * Available products tagged with a collection slug.
+ *
+ * @return array<int, array<string, mixed>>
+ */
+function products_in_category(string $category): array
+{
+    return array_values(array_filter(products(), function ($item) use ($category) {
+        return ($item['status'] ?? 'available') !== 'sold'
+            && in_array($category, $item['tags'] ?? [], true);
+    }));
+}
+
+/**
+ * Shared product-spec copy used on every details page.
+ * Stored once in product_common_details (admin-editable), not per product.
+ *
+ * @return array<int, array{id?:int, title: string, body: string}>
  */
 function product_spec_sections(): array
 {
-    return [
-        [
-            'title' => 'Size and quality',
-            'body' => 'Dimension: 10 inch × 13 inch. Print quality: the artwork is printed on 300 GSM thick paper with a high quality printer and vibrant colours, to give it a rich look. Item shape: rectangular. Frame material: engineered wood.',
-        ],
-        [
-            'title' => 'Great for gifting',
-            'body' => 'These framed posters encourage everyone to live a positive life and achieve more. Their longevity and everyday use give them something to remember you by. A thoughtful gift for a girl, man, boy, student, brother, or friend — and a perfect present for loved ones, colleagues, and friends.',
-        ],
-        [
-            'title' => 'Reusable frames',
-            'body' => 'If you want to change the artwork for another poster or photo later, you can. Remove the MDF wood board and put in a new image of your choice.',
-        ],
-        [
-            'title' => 'Use wherever you want',
-            'body' => 'These stylish picture frames work as home and office decoration, and also suit hostels, study rooms, classrooms, corridors, shops, and cafés. If you can find a wall to hang them on, they will stay and say something.',
-        ],
-    ];
+    return product_details_from_db();
 }
 
 /**

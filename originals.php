@@ -18,7 +18,7 @@ require __DIR__ . '/includes/header.php';
 $title = 'Original Paintings';
 $subtitle = null;
 $lede = "Each original is a one-of-a-kind piece — painted, finished, and signed entirely by hand. When you bring home an original, you're not just getting a painting; you're getting the exact brushstrokes, colour decisions, and quiet hours that went into making it.";
-$image = 'images/artwork/image-14.jpeg';
+$image = 'images/artwork/girl-with-ducklings.jpeg';
 $image_alt = 'Original painting by Lakshmi Sridhar';
 $eyebrow = 'Purchase';
 ?>

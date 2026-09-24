@@ -21,8 +21,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if (!empty($_POST['tag_print'])) {
         $tags[] = 'print';
     }
+    $categoryTag = trim((string) ($_POST['category'] ?? ''));
+    if ($categoryTag !== '' && isset(shop_categories()[$categoryTag])) {
+        $tags[] = $categoryTag;
+    }
 
-    $currentImage = (!$isNew && $product) ? (string) ($product['image'] ?? '') : 'images/artwork/image-1.jpeg';
+    $currentImage = (!$isNew && $product) ? (string) ($product['image'] ?? '') : 'images/artwork/krishna-petals.jpeg';
     $uploaded = product_upload_image($_FILES['image'] ?? null, $isNew ? product_slug((string) ($_POST['title'] ?? 'product')) : $id);
     if ($uploaded === null && !empty($_FILES['image']['name']) && (int) ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
         $error = db_last_error() ?: 'Image upload failed.';
@@ -115,14 +119,12 @@ $a3 = $product['sizes']['A3'] ?? $product['sizes']['L'] ?? ['price' => 0, 'compa
     <link rel="stylesheet" href="admin.css?v=<?= ASSET_VERSION ?>">
 </head>
 <body class="admin">
+    <?php $admin_nav = 'edit'; include __DIR__ . '/header.php'; ?>
     <div class="admin-shell">
         <div class="admin-top">
             <div>
                 <h1><?= $isNew ? 'Add product' : 'Edit product' ?></h1>
                 <p><?= $isNew ? 'Create a new catalogue item' : e($product['title'] ?? '') ?></p>
-            </div>
-            <div class="admin-actions">
-                <a class="btn btn--ghost" href="products.php">Back to list</a>
             </div>
         </div>
 
@@ -189,6 +191,16 @@ $a3 = $product['sizes']['A3'] ?? $product['sizes']['L'] ?? ['price' => 0, 'compa
                         <label><input type="checkbox" name="tag_original" value="1" <?= in_array('original', $tags, true) ? 'checked' : '' ?>> Original</label>
                         <label><input type="checkbox" name="tag_print" value="1" <?= in_array('print', $tags, true) ? 'checked' : '' ?>> Print</label>
                     </div>
+                </div>
+
+                <div class="field">
+                    <label for="category">Collection</label>
+                    <select id="category" name="category">
+                        <option value="">None</option>
+                        <?php foreach (shop_categories() as $slug => $cat): ?>
+                            <option value="<?= e($slug) ?>" <?= in_array($slug, $tags, true) ? 'selected' : '' ?>><?= e($cat['label']) ?></option>
+                        <?php endforeach; ?>
+                    </select>
                 </div>
 
                 <div class="field" style="margin-bottom:0;">

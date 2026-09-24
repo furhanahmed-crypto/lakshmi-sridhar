@@ -13,7 +13,7 @@ require __DIR__ . '/includes/header.php';
 $title = 'Learn to Paint With Me';
 $subtitle = null;
 $lede = "I believe anyone can learn to paint — you just need the right guidance, a little patience, and a space where mistakes are welcome. My training sessions are designed for beginners and improvers alike, whether you're picking up a brush for the first time or looking to build your confidence.";
-$image = 'images/artwork/image-16.jpeg';
+$image = 'images/artwork/autumn-grapes.jpeg';
 $image_alt = 'Art training session with Lakshmi Sridhar';
 $eyebrow = 'Courses Running';
 ?>

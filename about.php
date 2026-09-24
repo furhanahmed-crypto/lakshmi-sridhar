@@ -11,7 +11,7 @@ require __DIR__ . '/includes/header.php';
 $title = "Lakshmi's Corner of Art";
 $subtitle = 'Where creativity, passion, and emotion come together through every stroke and shade.';
 $lede = null;
-$image = 'images/artwork/image-11.jpeg';
+$image = 'images/artwork/blue-and-gold-macaw.jpeg';
 $image_alt = 'Portrait of Lakshmi Sridhar';
 $eyebrow = 'About the Artist';
 ?>
@@ -24,7 +24,7 @@ $eyebrow = 'About the Artist';
             <div class="about-story__media reveal">
                 <div class="about-story__frame">
                     <?php
-                    $image = 'images/artwork/image-12.jpeg';
+                    $image = 'images/artwork/scarlet-macaw.jpeg';
                     $image_alt = 'Artwork by Lakshmi Sridhar';
                     $image_loading = 'lazy';
                     include __DIR__ . '/sections/media.php';

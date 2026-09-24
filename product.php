@@ -16,7 +16,15 @@ if (!$product || ($product['status'] ?? 'available') === 'sold') {
     exit;
 }
 
-$current_page = 'purchase';
+$product_category = null;
+foreach (shop_categories() as $slug => $meta) {
+    if (in_array($slug, $product['tags'] ?? [], true)) {
+        $product_category = $meta + ['slug' => $slug];
+        break;
+    }
+}
+
+$current_page = $product_category['slug'] ?? 'purchase';
 $page_title = $product['title'];
 $page_description = $product['description'] ?: ('Enquire about ' . $product['title'] . ' as an original or a print.');
 
@@ -46,6 +54,10 @@ require __DIR__ . '/includes/header.php';
                 <a href="<?= page_url('originals.php') ?>">Originals</a>
                 ·
                 <a href="<?= page_url('prints.php') ?>">Prints</a>
+                <?php if ($product_category): ?>
+                    ·
+                    <a href="<?= page_url($product_category['page']) ?>"><?= e($product_category['label']) ?></a>
+                <?php endif; ?>
             </p>
 
             <article
@@ -115,6 +127,7 @@ require __DIR__ . '/includes/header.php';
                         </a>
                     </div>
 
+                    <?php if ($specs): ?>
                     <div class="product-detail__specs">
                         <?php foreach ($specs as $spec): ?>
                             <div>
@@ -122,6 +135,19 @@ require __DIR__ . '/includes/header.php';
                                 <p><?= e($spec['body']) ?></p>
                             </div>
                         <?php endforeach; ?>
+                    </div>
+                    <?php endif; ?>
+
+                    <div class="product-detail__follow">
+                        <p>Follow me on</p>
+                        <div class="product-detail__follow-links">
+                            <a class="social-link" href="<?= e(INSTAGRAM_URL) ?>" target="_blank" rel="noopener noreferrer" aria-label="Follow Lakshmi on Instagram">
+                                <i class="fa-brands fa-instagram" aria-hidden="true"></i>
+                            </a>
+                            <a class="social-link" href="<?= e(FACEBOOK_URL) ?>" target="_blank" rel="noopener noreferrer" aria-label="Follow Lakshmi on Facebook">
+                                <i class="fa-brands fa-facebook-f" aria-hidden="true"></i>
+                            </a>
+                        </div>
                     </div>
                 </div>
             </article>
