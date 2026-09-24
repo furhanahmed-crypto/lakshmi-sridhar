@@ -19,7 +19,7 @@ define('WHATSAPP_NUMBER', '353894413077'); // digits only for wa.me
 define('WHATSAPP_URL', 'https://wa.me/' . WHATSAPP_NUMBER);
 define('CONTACT_EMAIL', 'Lakshmi.Sridharj@gmail.com');
 
-define('ASSET_VERSION', '2.1.8');
+define('ASSET_VERSION', '2.2.3');
 define('PRINT_PRICE_RATIO', 0.5);
 
 require_once __DIR__ . '/db.php';
@@ -82,13 +82,94 @@ function shop_categories(): array
         ],
         'students-christmas' => [
             'label' => "Students' Christmas",
-            'page' => 'students-christmas.php',
+            'filter_label' => 'Children',
+            'query' => 'children',
+            'page' => 'children.php',
             'folder' => 'students-christmas-cards-2026',
             'description' => "Students' Christmas cards 2026 — artwork from Lakshmi's classes.",
             'lede' => 'A festive collection from the 2026 student Christmas cards — tap a piece for sizes and to buy as an original or a print.',
             'image' => 'images/artwork/students-christmas-cards-2026/parrot-1.jpeg',
         ],
+        'christmas-2026-cards' => [
+            'label' => 'Christmas 2026 Cards',
+            'page' => 'christmas-2026-cards.php',
+            'folder' => '',
+            'description' => 'Christmas 2026 cards by Lakshmi Sridhar — a new festive collection coming soon.',
+            'lede' => 'A new set of Christmas 2026 cards is on the way. Check back shortly, or browse another collection in the meantime.',
+            'image' => '',
+        ],
     ];
+}
+
+/**
+ * Map a filter slug or old ?category= value to the product tag.
+ */
+function shop_filter_tag(string $query): string
+{
+    $query = strtolower(trim($query));
+    if ($query === 'children' || $query === 'students-christmas') {
+        return 'students-christmas';
+    }
+    if (in_array($query, ['christmas', 'christmas-2026', 'christmas-2026-cards'], true)) {
+        return 'christmas-2026-cards';
+    }
+    return isset(shop_categories()[$query]) ? $query : '';
+}
+
+/**
+ * originals or prints, from a shop page path.
+ */
+function shop_root_from_page(string $page): string
+{
+    $page = strtolower(ltrim($page, '/'));
+    if ($page === 'prints.php' || str_starts_with($page, 'prints/')) {
+        return 'prints';
+    }
+    return 'originals';
+}
+
+/**
+ * Unique listing path: originals.php, prints/animals.php, originals/children.php.
+ */
+function shop_category_path(string $root, string $category = ''): string
+{
+    $root = $root === 'prints' ? 'prints' : 'originals';
+    $tag = shop_filter_tag($category);
+    if ($tag === '') {
+        return $root . '.php';
+    }
+    $file = shop_categories()[$tag]['page'] ?? '';
+    return $file !== '' ? $root . '/' . $file : $root . '.php';
+}
+
+/**
+ * Shop listing URL. Category lives under /originals/ or /prints/; search stays as ?q=.
+ */
+function shop_list_url(string $page = 'originals.php', string $category = '', string $q = ''): string
+{
+    $target = shop_category_path(shop_root_from_page($page), $category);
+    $q = trim($q);
+    $url = page_url($target);
+    return $q === '' ? $url : $url . '?' . http_build_query(['q' => $q]);
+}
+
+/**
+ * Send old category URLs to /originals/{page} or /prints/{page}.
+ */
+function shop_legacy_category_redirect(string $category, string $root = 'originals.php'): void
+{
+    $q = trim((string) ($_GET['q'] ?? ''));
+    header('Location: ' . shop_list_url($root, $category, $q), true, 301);
+    exit;
+}
+
+/**
+ * Whether the current page is part of the Purchase section.
+ */
+function shop_is_purchase_page(string $page): bool
+{
+    return in_array($page, ['originals', 'prints', 'purchase'], true)
+        || isset(shop_categories()[$page]);
 }
 
 /**
@@ -102,17 +183,6 @@ function products_in_category(string $category): array
         return ($item['status'] ?? 'available') !== 'sold'
             && in_array($category, $item['tags'] ?? [], true);
     }));
-}
-
-/**
- * Shared product-spec copy used on every details page.
- * Stored once in product_common_details (admin-editable), not per product.
- *
- * @return array<int, array{id?:int, title: string, body: string}>
- */
-function product_spec_sections(): array
-{
-    return product_details_from_db();
 }
 
 /**

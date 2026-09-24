@@ -385,6 +385,25 @@ table.products tr:last-child td {
   font-size: 0.85rem;
 }
 
+.additional-details {
+  gap: 0.85rem;
+}
+
+.additional-card {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.9rem;
+  background: #fff;
+}
+
+.additional-card .field:first-child {
+  margin-bottom: 0.85rem;
+}
+
+.additional-card textarea {
+  min-height: 130px;
+}
+
 .check-row {
   display: flex;
   flex-wrap: wrap;

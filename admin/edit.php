@@ -26,6 +26,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $tags[] = $categoryTag;
     }
 
+    $additionalDetails = [];
+    $postedDetails = $_POST['additional_details'] ?? [];
+    if (is_array($postedDetails)) {
+        foreach ($postedDetails as $row) {
+            if (!is_array($row)) {
+                continue;
+            }
+            $additionalDetails[] = [
+                'title' => trim((string) ($row['title'] ?? '')),
+                'body' => trim((string) ($row['body'] ?? '')),
+            ];
+        }
+    }
+
     $currentImage = (!$isNew && $product) ? (string) ($product['image'] ?? '') : 'images/artwork/krishna-petals.jpeg';
     $uploaded = product_upload_image($_FILES['image'] ?? null, $isNew ? product_slug((string) ($_POST['title'] ?? 'product')) : $id);
     if ($uploaded === null && !empty($_FILES['image']['name']) && (int) ($_FILES['image']['error'] ?? UPLOAD_ERR_NO_FILE) !== UPLOAD_ERR_NO_FILE) {
@@ -35,6 +49,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'id' => $isNew ? '' : $id,
             'title' => trim((string) ($_POST['title'] ?? '')),
             'description' => trim((string) ($_POST['description'] ?? '')),
+            'additional_details' => $additionalDetails,
             'image' => $uploaded ?: $currentImage,
             'image_alt' => trim((string) ($_POST['image_alt'] ?? '')),
             'status' => ($_POST['status'] ?? 'available') === 'sold' ? 'sold' : 'available',
@@ -71,6 +86,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $product = array_merge($product ?? [], [
         'title' => trim((string) ($_POST['title'] ?? '')),
         'description' => trim((string) ($_POST['description'] ?? '')),
+        'additional_details' => $additionalDetails ?? [],
         'image' => $uploaded ?: $currentImage,
         'image_alt' => trim((string) ($_POST['image_alt'] ?? '')),
         'status' => ($_POST['status'] ?? 'available') === 'sold' ? 'sold' : 'available',
@@ -89,6 +105,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 $product = $product ?? [
     'title' => '',
     'description' => '',
+    'additional_details' => product_additional_details_defaults(),
     'image_alt' => '',
     'status' => 'available',
     'featured' => false,
@@ -101,6 +118,15 @@ $product = $product ?? [
         'A3' => ['label' => 'A3', 'price' => 149, 'compare_at' => 199],
     ],
 ];
+
+$defaults = product_additional_details_defaults();
+$additionalDetails = array_values($product['additional_details'] ?? []);
+if ($additionalDetails === []) {
+    $additionalDetails = $defaults;
+}
+while (count($additionalDetails) < 4) {
+    $additionalDetails[] = $defaults[count($additionalDetails)] ?? ['title' => '', 'body' => ''];
+}
 
 $tags = $product['tags'] ?? [];
 $a1 = $product['sizes']['A1'] ?? $product['sizes']['S'] ?? ['price' => 0, 'compare_at' => null];
@@ -203,7 +229,7 @@ $a3 = $product['sizes']['A3'] ?? $product['sizes']['L'] ?? ['price' => 0, 'compa
                     </select>
                 </div>
 
-                <div class="field" style="margin-bottom:0;">
+                <div class="field">
                     <label>Original size prices (print is 50% of these)</label>
                     <div class="sizes-grid">
                         <?php
@@ -215,7 +241,7 @@ $a3 = $product['sizes']['A3'] ?? $product['sizes']['L'] ?? ['price' => 0, 'compa
                         foreach ($sizeFields as $code => [$size, $priceName, $compareName]):
                         ?>
                             <div class="size-card">
-                                <h3><?= e($code) ?> · <?= e($size['label'] ?? $code) ?></h3>
+                                <h3><?= e($code) ?></h3>
                                 <div class="field">
                                     <label for="<?= e($priceName) ?>">Price (€)</label>
                                     <input id="<?= e($priceName) ?>" name="<?= e($priceName) ?>" type="number" min="0" step="1" required value="<?= e((string) (int) ($size['price'] ?? 0)) ?>">
@@ -227,6 +253,23 @@ $a3 = $product['sizes']['A3'] ?? $product['sizes']['L'] ?? ['price' => 0, 'compa
                             </div>
                         <?php endforeach; ?>
                     </div>
+                </div>
+
+                <div class="field additional-details" style="margin-bottom:0;">
+                    <label>Product additional details</label>
+                    <p class="field-hint">Shown on this product’s page. Same starting copy on every product — change any section here without affecting the others.</p>
+                    <?php foreach ($additionalDetails as $i => $section): ?>
+                        <div class="additional-card">
+                            <div class="field">
+                                <label for="detail-title-<?= (int) $i ?>">Section <?= (int) $i + 1 ?> heading</label>
+                                <input id="detail-title-<?= (int) $i ?>" name="additional_details[<?= (int) $i ?>][title]" value="<?= e($section['title'] ?? '') ?>">
+                            </div>
+                            <div class="field" style="margin-bottom:0;">
+                                <label for="detail-body-<?= (int) $i ?>">Section <?= (int) $i + 1 ?> text</label>
+                                <textarea id="detail-body-<?= (int) $i ?>" name="additional_details[<?= (int) $i ?>][body]" rows="5"><?= e($section['body'] ?? '') ?></textarea>
+                            </div>
+                        </div>
+                    <?php endforeach; ?>
                 </div>
             </div>
 

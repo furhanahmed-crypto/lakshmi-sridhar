@@ -67,6 +67,28 @@ function db_last_error(): ?string
  * @param bool $includeAll when true, include sold items (admin)
  * @return array<int, array<string, mixed>>|null null when DB unavailable
  */
+function products_has_additional_details_column(): bool
+{
+    static $has = null;
+    if ($has !== null) {
+        return $has;
+    }
+
+    $pdo = db();
+    if (!$pdo) {
+        $has = false;
+        return false;
+    }
+
+    try {
+        $has = (bool) $pdo->query("SHOW COLUMNS FROM products LIKE 'product_additional_details'")->fetch();
+    } catch (Throwable $e) {
+        $has = false;
+    }
+
+    return $has;
+}
+
 function products_from_db(bool $includeAll = false): ?array
 {
     $pdo = db();
@@ -75,8 +97,9 @@ function products_from_db(bool $includeAll = false): ?array
     }
 
     try {
-        $sql = 'SELECT id, title, description, image, image_alt, tags, status, featured, default_size, sort_order
-             FROM products';
+        $detailsCol = products_has_additional_details_column() ? 'product_additional_details, ' : '';
+        $sql = "SELECT id, title, description, {$detailsCol}image, image_alt, tags, status, featured, default_size, sort_order
+             FROM products";
         if (!$includeAll) {
             $sql .= ' WHERE status = \'available\'';
         }
@@ -168,6 +191,7 @@ function map_product_row(array $row, PDOStatement $sizeStmt): array
         'id' => $row['id'],
         'title' => $row['title'],
         'description' => $row['description'] ?? '',
+        'additional_details' => product_additional_details_decode($row['product_additional_details'] ?? ''),
         'image' => $row['image'],
         'image_alt' => $row['image_alt'] ?? $row['title'],
         'tags' => $tags,
@@ -187,9 +211,10 @@ function product_by_id(string $id): ?array
     }
 
     try {
+        $detailsCol = products_has_additional_details_column() ? 'product_additional_details, ' : '';
         $stmt = $pdo->prepare(
-            'SELECT id, title, description, image, image_alt, tags, status, featured, default_size, sort_order
-             FROM products WHERE id = ? LIMIT 1'
+            "SELECT id, title, description, {$detailsCol}image, image_alt, tags, status, featured, default_size, sort_order
+             FROM products WHERE id = ? LIMIT 1"
         );
         $stmt->execute([$id]);
         $row = $stmt->fetch();
@@ -326,6 +351,12 @@ function product_save(array $data, bool $isNew = false): ?string
     }
 
     $description = trim((string) ($data['description'] ?? ''));
+    if (!products_has_additional_details_column()) {
+        $GLOBALS['_db_last_error'] = 'Run database/product-additional-details.sql first to add product_additional_details.';
+        return null;
+    }
+
+    $additionalDetails = product_additional_details_encode($data['additional_details'] ?? []);
     $image = trim((string) ($data['image'] ?? 'images/artwork/krishna-petals.jpeg'));
     if ($image === '') {
         $image = 'images/artwork/krishna-petals.jpeg';
@@ -369,21 +400,21 @@ function product_save(array $data, bool $isNew = false): ?string
             }
 
             $ins = $pdo->prepare(
-                'INSERT INTO products (id, title, description, image, image_alt, tags, status, featured, default_size, sort_order)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                'INSERT INTO products (id, title, description, product_additional_details, image, image_alt, tags, status, featured, default_size, sort_order)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
             );
             $ins->execute([
-                $id, $title, $description, $image, $imageAlt, $tagsJson,
+                $id, $title, $description, $additionalDetails, $image, $imageAlt, $tagsJson,
                 $status, $featured, $defaultSize, $sortOrder,
             ]);
         } else {
             $upd = $pdo->prepare(
                 'UPDATE products
-                 SET title = ?, description = ?, image = ?, image_alt = ?, tags = ?, status = ?, featured = ?, default_size = ?, sort_order = ?
+                 SET title = ?, description = ?, product_additional_details = ?, image = ?, image_alt = ?, tags = ?, status = ?, featured = ?, default_size = ?, sort_order = ?
                  WHERE id = ?'
             );
             $upd->execute([
-                $title, $description, $image, $imageAlt, $tagsJson,
+                $title, $description, $additionalDetails, $image, $imageAlt, $tagsJson,
                 $status, $featured, $defaultSize, $sortOrder, $id,
             ]);
             if ($upd->rowCount() === 0) {
@@ -423,126 +454,88 @@ function product_save(array $data, bool $isNew = false): ?string
     }
 }
 
-function product_details_ensure_table(): bool
+/**
+ * Default additional-details copy used for new products and the SQL seed.
+ *
+ * @return array<int, array{title:string, body:string}>
+ */
+function product_additional_details_defaults(): array
 {
-    $pdo = db();
-    if (!$pdo) {
-        return false;
-    }
-
-    try {
-        $old = $pdo->query("SHOW TABLES LIKE 'product_detail_sections'")->fetchColumn();
-        $new = $pdo->query("SHOW TABLES LIKE 'product_common_details'")->fetchColumn();
-        if ($old && !$new) {
-            $pdo->exec('RENAME TABLE product_detail_sections TO product_common_details');
-        }
-
-        $pdo->exec(
-            'CREATE TABLE IF NOT EXISTS product_common_details (
-                id TINYINT UNSIGNED NOT NULL AUTO_INCREMENT,
-                heading VARCHAR(160) NOT NULL,
-                body TEXT NOT NULL,
-                sort_order TINYINT UNSIGNED NOT NULL DEFAULT 0,
-                updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-                PRIMARY KEY (id)
-            ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci'
-        );
-
-        return true;
-    } catch (Throwable $e) {
-        error_log('product_details_ensure_table failed: ' . $e->getMessage());
-        $GLOBALS['_db_last_error'] = $e->getMessage();
-        return false;
-    }
+    return [
+        [
+            'title' => 'Size and quality',
+            'body' => 'Dimension: 10 inch × 13 inch. Print quality: the artwork is printed on 300 GSM thick paper with a high quality printer and vibrant colours, to give it a rich look. Item shape: rectangular. Frame material: engineered wood.',
+        ],
+        [
+            'title' => 'Great for gifting',
+            'body' => 'These framed posters encourage everyone to live a positive life and achieve more. Their longevity and everyday use give them something to remember you by. A thoughtful gift for a girl, man, boy, student, brother, or friend — and a perfect present for loved ones, colleagues, and friends.',
+        ],
+        [
+            'title' => 'Reusable frames',
+            'body' => 'If you want to change the artwork for another poster or photo later, you can. Remove the MDF wood board and put in a new image of your choice.',
+        ],
+        [
+            'title' => 'Use wherever you want',
+            'body' => 'These stylish picture frames work as home and office decoration, and also suit hostels, study rooms, classrooms, corridors, shops, and cafés. If you can find a wall to hang them on, they will stay and say something.',
+        ],
+    ];
 }
 
 /**
- * @return array<int, array{id:int, title:string, body:string}>
+ * @return array<int, array{title:string, body:string}>
  */
-function product_details_from_db(): array
+function product_additional_details_decode(mixed $raw): array
 {
-    if (!product_details_ensure_table()) {
+    if (is_array($raw)) {
+        $decoded = $raw;
+    } elseif (is_string($raw) && trim($raw) !== '') {
+        $decoded = json_decode($raw, true);
+    } else {
+        $decoded = null;
+    }
+
+    if (!is_array($decoded)) {
         return [];
     }
 
-    $pdo = db();
-    if (!$pdo) {
-        return [];
-    }
-
-    try {
-        $rows = $pdo->query(
-            'SELECT id, heading, body FROM product_common_details ORDER BY sort_order ASC, id ASC'
-        )->fetchAll();
-
-        $sections = [];
-        foreach ($rows as $row) {
-            $title = trim((string) $row['heading']);
-            $body = trim((string) $row['body']);
-            if ($title === '' && $body === '') {
-                continue;
-            }
-            $sections[] = [
-                'id' => (int) $row['id'],
-                'title' => $title,
-                'body' => $body,
-            ];
+    $sections = [];
+    foreach ($decoded as $row) {
+        if (!is_array($row)) {
+            continue;
         }
-
-        return $sections;
-    } catch (Throwable $e) {
-        error_log('product_details_from_db failed: ' . $e->getMessage());
-        $GLOBALS['_db_last_error'] = $e->getMessage();
-        return [];
+        $title = trim((string) ($row['title'] ?? ''));
+        $body = trim((string) ($row['body'] ?? ''));
+        if ($title === '' && $body === '') {
+            continue;
+        }
+        $sections[] = [
+            'title' => $title,
+            'body' => $body,
+        ];
     }
+
+    return $sections;
 }
 
 /**
- * @param array<int, array{id?:int|string, title?:string, body?:string}> $sections
+ * @param array<int, array{title?:string, body?:string}> $sections
  */
-function product_details_save(array $sections): bool
+function product_additional_details_encode(array $sections): string
 {
-    if (!product_details_ensure_table()) {
-        return false;
-    }
-
-    $pdo = db();
-    if (!$pdo) {
-        return false;
-    }
-
-    try {
-        $pdo->beginTransaction();
-        $upd = $pdo->prepare(
-            'UPDATE product_common_details SET heading = ?, body = ?, sort_order = ? WHERE id = ?'
-        );
-        $ins = $pdo->prepare(
-            'INSERT INTO product_common_details (heading, body, sort_order) VALUES (?, ?, ?)'
-        );
-
-        foreach (array_values($sections) as $i => $section) {
-            $id = (int) ($section['id'] ?? 0);
-            $title = trim((string) ($section['title'] ?? ''));
-            $body = trim((string) ($section['body'] ?? ''));
-            $order = $i + 1;
-
-            if ($id > 0) {
-                $upd->execute([$title, $body, $order, $id]);
-            } elseif ($title !== '' || $body !== '') {
-                $ins->execute([$title, $body, $order]);
-            }
+    $clean = [];
+    foreach ($sections as $row) {
+        $title = trim((string) ($row['title'] ?? ''));
+        $body = trim((string) ($row['body'] ?? ''));
+        if ($title === '' && $body === '') {
+            continue;
         }
-
-        $pdo->commit();
-        return true;
-    } catch (Throwable $e) {
-        if ($pdo->inTransaction()) {
-            $pdo->rollBack();
-        }
-        error_log('product_details_save failed: ' . $e->getMessage());
-        $GLOBALS['_db_last_error'] = $e->getMessage();
-        return false;
+        $clean[] = [
+            'title' => $title,
+            'body' => $body,
+        ];
     }
+
+    return json_encode($clean, JSON_UNESCAPED_UNICODE) ?: '[]';
 }
 
 function product_delete(string $id): bool

@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS products (
   id VARCHAR(64) NOT NULL,
   title VARCHAR(255) NOT NULL,
   description TEXT NULL,
+  product_additional_details TEXT NULL,
   image VARCHAR(255) NOT NULL,
   image_alt VARCHAR(255) NULL,
   tags JSON NOT NULL,

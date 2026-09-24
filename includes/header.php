@@ -7,23 +7,14 @@ $nav_items = [
     [
         'label' => 'Purchase',
         'slug' => 'purchase',
-        'children' => array_merge(
-            [
-                ['label' => 'Originals', 'slug' => 'originals', 'href' => page_url('originals.php')],
-                ['label' => 'Prints', 'slug' => 'prints', 'href' => page_url('prints.php')],
-            ],
-            array_map(function ($slug, $cat) {
-                return [
-                    'label' => $cat['label'],
-                    'slug' => $slug,
-                    'href' => page_url($cat['page']),
-                ];
-            }, array_keys(shop_categories()), shop_categories())
-        ),
+        'children' => [
+            ['label' => 'Originals', 'slug' => 'originals', 'href' => page_url('originals.php')],
+            ['label' => 'Prints', 'slug' => 'prints', 'href' => page_url('prints.php')],
+        ],
     ],
     ['label' => 'Contact Us', 'slug' => 'contact', 'href' => page_url('contact.php')],
 ];
-$purchase_active = in_array($current_page ?? '', array_merge(['originals', 'prints', 'purchase'], array_keys(shop_categories())), true);
+$purchase_active = shop_is_purchase_page((string) ($current_page ?? ''));
 ?>
 <header class="site-header" data-header>
     <div class="site-header__inner">

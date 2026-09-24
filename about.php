@@ -3,7 +3,7 @@ require_once __DIR__ . '/includes/config.php';
 
 $current_page = 'about';
 $page_title = 'About Us';
-$page_description = 'Meet Lakshmi Sridhar — an Indian artist based in Celbridge, Ireland, drawing realistic human and animal portraits in graphite, charcoal, and colour pencil.';
+$page_description = 'Welcome to Lakshmi’s world of art — an Indian artist based in Celbridge, Ireland, specialising in realistic human and animal portraits in graphite, charcoal, and coloured pencils.';
 
 require __DIR__ . '/includes/head.php';
 require __DIR__ . '/includes/header.php';
@@ -35,11 +35,16 @@ $eyebrow = 'About the Artist';
             <div class="about-story__copy">
                 <h2 id="about-story-heading" class="section-title split-chars">The story behind the drawing</h2>
                 <div class="reveal">
-                    <p>I am Lakshmi Sridhar, an Indian artist based in Celbridge, Ireland. My love for art began in childhood, and since then, drawing has always been close to my heart. I believe every artwork has its own story, and I love bringing those stories to life through realistic details, expressions, and emotions.</p>
-                    <p>I mainly work in graphite, charcoal, and colour pencil, exploring human and animal portraits — capturing not just a likeness, but a feeling, a moment, a story worth holding onto. I give my hundred percent to every piece, paying close attention to even the smallest details, because it's often those details that make a portrait feel truly alive.</p>
-                    <p>Art has also given me the opportunity to share my passion with others through teaching. I love encouraging children to explore their creativity, discover their own artistic abilities, and enjoy the simple beauty of creating something with their own hands.</p>
-                    <p>For me, art is not just about creating a picture — it is about capturing a feeling, a moment, and a story.</p>
-                    <p>Thank you for taking the time to get to know me a little. I hope my work brings you the same warmth it brings me while I create it.</p>
+                    <p>Welcome to Lakshmi’s world of art — where pencils don’t just draw, they speak!</p>
+                    <p>My love for art began in childhood with a pencil, a piece of paper, and plenty of imagination. What started as simple sketches soon became a passion that has stayed with me ever since.</p>
+                    <p>Today, I am an Indian artist based in Celbridge, Ireland, specialising in realistic human and animal portraits.</p>
+                    <p>Graphite, charcoal, or coloured pencils — give me a pencil, and I am in my happy place! I love playing with shades, textures, and expressions and enjoy the challenge of capturing the characters and emotions of each subject and then bringing them to life on paper.</p>
+                    <p>My little formula for art is: 3P = P<sup>2</sup></p>
+                    <p>Patience + Practice + Passion = Portraits with Personality!</p>
+                    <p>Alongside creating art, I also teach it — helping little hands sketch their ideas and young minds colour their imagination.</p>
+                    <p>As an art teacher, one of my greatest joys is sharing what I know with children and watching their creativity take shape.</p>
+                    <p>I started by drawing pictures; today, I also draw out the artist in every child!</p>
+                    <p>Because art, for me, is not just about creating something beautiful — it is about bringing something within us to life.</p>
                     <p class="about-signature">— Lakshmi</p>
                 </div>
             </div>

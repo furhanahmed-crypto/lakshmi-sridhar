@@ -5,7 +5,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta name="description" content="<?= e($page_description ?? 'Original paintings, fine art prints, and hands-on training by Lakshmi Sridhar — created with love in Ireland.') ?>">
+    <?php if (!empty($page_robots)): ?>
+        <meta name="robots" content="<?= e($page_robots) ?>">
+    <?php endif; ?>
     <title><?= e(($page_title ?? 'Home') . ' — ' . SITE_NAME) ?></title>
+    <?php if (!empty($canonical)): ?>
+        <link rel="canonical" href="<?= e($canonical) ?>">
+    <?php endif; ?>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>

@@ -1,9 +1,20 @@
 <?php
 require_once __DIR__ . '/includes/config.php';
 
+$search_q = trim((string) ($_GET['q'] ?? ''));
+$legacy = shop_filter_tag((string) ($_GET['category'] ?? ''));
+if ($legacy !== '') {
+    header('Location: ' . shop_list_url('originals.php', $legacy, $search_q), true, 301);
+    exit;
+}
+
 $current_page = 'originals';
 $page_title = 'Original Paintings';
 $page_description = 'One-of-a-kind original paintings by Lakshmi Sridhar — painted, finished, and signed by hand in Ireland.';
+$canonical = page_url('originals.php');
+if ($search_q !== '') {
+    $page_robots = 'noindex, follow';
+}
 
 $artworks = products();
 $originals = array_values(array_filter(
@@ -28,14 +39,14 @@ $eyebrow = 'Purchase';
 
     <section class="section" aria-label="Available originals">
         <div class="container">
-            <?php $items = $originals; include __DIR__ . '/sections/products-notice.php'; ?>
-            <?php if ($originals): ?>
-            <div class="art-grid art-grid--shop">
-                <?php foreach ($originals as $item): ?>
-                    <?php $context = 'original'; include __DIR__ . '/sections/artwork-card.php'; ?>
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
+            <?php
+            $items = $originals;
+            $context = 'original';
+            $shop_page = 'originals.php';
+            $shop_root = 'originals.php';
+            $active_category = '';
+            include __DIR__ . '/sections/shop-listing.php';
+            ?>
         </div>
     </section>
 

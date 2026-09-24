@@ -24,7 +24,7 @@ foreach (shop_categories() as $slug => $meta) {
     }
 }
 
-$current_page = $product_category['slug'] ?? 'purchase';
+$current_page = 'originals';
 $page_title = $product['title'];
 $page_description = $product['description'] ?: ('Enquire about ' . $product['title'] . ' as an original or a print.');
 
@@ -34,7 +34,7 @@ $active_key = isset($sizes[$default_size]) ? $default_size : array_key_first($si
 $active = ($active_key !== null && isset($sizes[$active_key])) ? $sizes[$active_key] : ['price' => 0, 'compare_at' => null, 'label' => $active_key];
 $original_price = (float) ($active['price'] ?? 0);
 $print_amount = print_price($original_price);
-$specs = product_spec_sections();
+$specs = $product['additional_details'] ?? [];
 
 $image = $product['image'] ?? null;
 $image_alt = $product['image_alt'] ?? $product['title'];
@@ -51,12 +51,12 @@ require __DIR__ . '/includes/header.php';
     <section class="section product-detail-section">
         <div class="container">
             <p class="eyebrow reveal">
-                <a href="<?= page_url('originals.php') ?>">Originals</a>
+                <a href="<?= e(shop_list_url('originals.php', $product_category['slug'] ?? '')) ?>">Originals</a>
                 ·
-                <a href="<?= page_url('prints.php') ?>">Prints</a>
+                <a href="<?= e(shop_list_url('prints.php', $product_category['slug'] ?? '')) ?>">Prints</a>
                 <?php if ($product_category): ?>
                     ·
-                    <a href="<?= page_url($product_category['page']) ?>"><?= e($product_category['label']) ?></a>
+                    <?= e($product_category['filter_label'] ?? $product_category['label']) ?>
                 <?php endif; ?>
             </p>
 

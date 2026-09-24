@@ -1,9 +1,20 @@
 <?php
 require_once __DIR__ . '/includes/config.php';
 
+$search_q = trim((string) ($_GET['q'] ?? ''));
+$legacy = shop_filter_tag((string) ($_GET['category'] ?? ''));
+if ($legacy !== '') {
+    header('Location: ' . shop_list_url('prints.php', $legacy, $search_q), true, 301);
+    exit;
+}
+
 $current_page = 'prints';
 $page_title = 'Fine Art Prints';
 $page_description = 'Archival fine art prints by Lakshmi Sridhar — carefully reproduced to stay true to the colour and detail of the original.';
+$canonical = page_url('prints.php');
+if ($search_q !== '') {
+    $page_robots = 'noindex, follow';
+}
 
 $artworks = products();
 $prints = array_values(array_filter(
@@ -28,14 +39,14 @@ $eyebrow = 'Purchase';
 
     <section class="section" aria-label="Available prints">
         <div class="container">
-            <?php $items = $prints; include __DIR__ . '/sections/products-notice.php'; ?>
-            <?php if ($prints): ?>
-            <div class="art-grid art-grid--shop">
-                <?php foreach ($prints as $item): ?>
-                    <?php $context = 'print'; include __DIR__ . '/sections/artwork-card.php'; ?>
-                <?php endforeach; ?>
-            </div>
-            <?php endif; ?>
+            <?php
+            $items = $prints;
+            $context = 'print';
+            $shop_page = 'prints.php';
+            $shop_root = 'prints.php';
+            $active_category = '';
+            include __DIR__ . '/sections/shop-listing.php';
+            ?>
         </div>
     </section>
 
