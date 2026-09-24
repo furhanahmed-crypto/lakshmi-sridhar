@@ -585,6 +585,9 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 }
 
 .feature-card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   padding: 2rem 1.75rem;
   border: 1px solid var(--border-soft);
   background: var(--cotton);
@@ -614,6 +617,10 @@ ul, ol { margin: 0; padding: 0; list-style: none; }
 .feature-card p {
   color: var(--text-muted);
   margin-bottom: 1.4rem;
+}
+
+.fill-height {
+  flex: 1 1 auto;
 }
 
 .feature-card .btn-row {
