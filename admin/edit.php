@@ -142,7 +142,7 @@ $a3 = $product['sizes']['A3'] ?? $product['sizes']['L'] ?? ['price' => 0, 'compa
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=<?= ASSET_VERSION ?>">
+    <link rel="stylesheet" href="<?= e(admin_asset('admin.css')) ?>">
 </head>
 <body class="admin">
     <?php $admin_nav = 'edit'; include __DIR__ . '/header.php'; ?>
@@ -172,13 +172,17 @@ $a3 = $product['sizes']['A3'] ?? $product['sizes']['L'] ?? ['price' => 0, 'compa
 
                 <div class="field">
                     <label for="image">Product image</label>
-                    <?php if (!empty($product['image'])): ?>
-                        <div class="image-preview">
-                            <img src="<?= asset($product['image']) ?>" alt="<?= e($product['image_alt'] ?? $product['title'] ?? '') ?>">
-                        </div>
-                    <?php endif; ?>
-                    <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp">
-                    <p class="field-hint"><?= $isNew ? 'Saved as-is into assets/images/artwork/ using your filename · JPG, PNG, or WebP · max 5MB' : 'Leave empty to keep current image. New upload keeps your exact filename in artwork/ · JPG, PNG, or WebP · max 5MB' ?></p>
+                    <div class="image-preview<?= empty($product['image']) ? ' is-empty' : '' ?>" data-image-preview>
+                        <img
+                            src="<?= !empty($product['image']) ? e(asset($product['image'])) : '' ?>"
+                            alt="<?= e($product['image_alt'] ?? $product['title'] ?? '') ?>"
+                            data-image-preview-img
+                            <?= empty($product['image']) ? 'hidden' : '' ?>
+                        >
+                        <span class="image-preview__placeholder" data-image-preview-placeholder<?= !empty($product['image']) ? ' hidden' : '' ?>>No image</span>
+                    </div>
+                    <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp" data-image-input>
+                    <p class="field-hint" data-image-preview-status><?= $isNew ? 'Saved as-is into assets/images/artwork/ using your filename · JPG, PNG, or WebP · max 5MB' : 'Leave empty to keep current image. New upload keeps your exact filename in artwork/ · JPG, PNG, or WebP · max 5MB' ?></p>
                 </div>
 
                 <div class="form-grid form-grid--2" style="padding:0;gap:1rem;">
@@ -275,9 +279,73 @@ $a3 = $product['sizes']['A3'] ?? $product['sizes']['L'] ?? ['price' => 0, 'compa
 
             <div class="form-footer">
                 <button class="btn btn--primary" type="submit"><?= $isNew ? 'Add product' : 'Save changes' ?></button>
-                <a class="btn btn--ghost" href="products.php">Cancel</a>
+                <a class="btn btn--ghost" href="<?= e(admin_url('products.php')) ?>">Cancel</a>
             </div>
         </form>
     </div>
+    <script>
+    (function () {
+      var input = document.querySelector("[data-image-input]");
+      var wrap = document.querySelector("[data-image-preview]");
+      var img = document.querySelector("[data-image-preview-img]");
+      var placeholder = document.querySelector("[data-image-preview-placeholder]");
+      var status = document.querySelector("[data-image-preview-status]");
+      if (!input || !wrap || !img) return;
+
+      var originalSrc = img.getAttribute("src") || "";
+      var originalHint = status ? status.textContent : "";
+      var objectUrl = null;
+
+      function revokePreviewUrl() {
+        if (objectUrl) {
+          URL.revokeObjectURL(objectUrl);
+          objectUrl = null;
+        }
+      }
+
+      function showPreview(src, fileName) {
+        img.hidden = false;
+        img.src = src;
+        wrap.classList.remove("is-empty");
+        wrap.classList.add("is-new");
+        if (placeholder) placeholder.hidden = true;
+        if (status) status.textContent = "New image selected: " + fileName + " — save to apply.";
+      }
+
+      function clearPreview() {
+        revokePreviewUrl();
+        wrap.classList.remove("is-new");
+        if (originalSrc) {
+          img.src = originalSrc;
+          img.hidden = false;
+          wrap.classList.remove("is-empty");
+          if (placeholder) placeholder.hidden = true;
+        } else {
+          img.removeAttribute("src");
+          img.hidden = true;
+          wrap.classList.add("is-empty");
+          if (placeholder) placeholder.hidden = false;
+        }
+        if (status) status.textContent = originalHint;
+      }
+
+      input.addEventListener("change", function () {
+        var file = input.files && input.files[0];
+        if (!file) {
+          clearPreview();
+          return;
+        }
+        if (!file.type || file.type.indexOf("image/") !== 0) {
+          clearPreview();
+          if (status) status.textContent = "Please choose a JPG, PNG, or WebP image.";
+          input.value = "";
+          return;
+        }
+        revokePreviewUrl();
+        objectUrl = URL.createObjectURL(file);
+        showPreview(objectUrl, file.name);
+      });
+    })();
+    </script>
 </body>
 </html>

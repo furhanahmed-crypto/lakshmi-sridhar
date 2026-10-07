@@ -27,12 +27,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=<?= ASSET_VERSION ?>">
+    <link rel="stylesheet" href="<?= e(admin_asset('admin.css')) ?>">
 </head>
 
 <body class="admin">
     <div class="login-wrap">
-        <form class="login-card" method="post" autocomplete="current-password">
+        <form class="login-card" method="post" action="<?= e(admin_url('index.php')) ?>" autocomplete="current-password">
             <h1>Admin</h1>
             <p>Enter the password to manage products.</p>
             <?php if ($error): ?>

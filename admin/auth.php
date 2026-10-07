@@ -9,6 +9,25 @@ if (session_status() !== PHP_SESSION_ACTIVE) {
     session_start();
 }
 
+/**
+ * /admin (no trailing slash) makes relative URLs like admin.css resolve to /admin.css.
+ * Always send browsers to /admin/ first (Apache .htaccess does this too; PHP -S needs this).
+ */
+function admin_redirect_bare_path(): void
+{
+    $uri = (string) ($_SERVER['REQUEST_URI'] ?? '');
+    $path = (string) (parse_url($uri, PHP_URL_PATH) ?: '');
+    if ($path !== '/admin') {
+        return;
+    }
+    $query = parse_url($uri, PHP_URL_QUERY);
+    $target = '/admin/' . ($query ? ('?' . $query) : '');
+    header('Location: ' . $target, true, 301);
+    exit;
+}
+
+admin_redirect_bare_path();
+
 function admin_password(): string
 {
     $cfg = $GLOBALS['_db_config'] ?? null;
@@ -21,8 +40,7 @@ function admin_password(): string
 }
 
 /**
- * Absolute URL under /admin/ so redirects work when visiting /admin (no trailing slash).
- * Relative "products.php" from /admin resolves to /products.php in the browser.
+ * Absolute URL under /admin/ so links/CSS work from /admin and /admin/index.php.
  */
 function admin_url(string $path = ''): string
 {
@@ -38,6 +56,12 @@ function admin_url(string $path = ''): string
     }
     $path = ltrim($path, '/');
     return $path === '' ? $dir . '/' : $dir . '/' . $path;
+}
+
+/** Versioned stylesheet/script URL under /admin/ (never relative). */
+function admin_asset(string $file): string
+{
+    return admin_url($file) . '?v=' . rawurlencode((string) ASSET_VERSION);
 }
 
 function admin_logged_in(): bool

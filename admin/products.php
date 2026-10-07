@@ -17,7 +17,7 @@ unset($_SESSION['admin_flash']);
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="admin.css?v=<?= ASSET_VERSION ?>">
+    <link rel="stylesheet" href="<?= e(admin_asset('admin.css')) ?>">
 </head>
 <body class="admin">
     <?php $admin_nav = 'products'; include __DIR__ . '/header.php'; ?>
@@ -39,7 +39,7 @@ unset($_SESSION['admin_flash']);
 
         <div class="panel">
             <?php if (!$dbError && !$products): ?>
-                <p class="empty">No products yet. <a href="edit.php">Add the first one</a>.</p>
+                <p class="empty">No products yet. <a href="<?= e(admin_url('edit.php')) ?>">Add the first one</a>.</p>
             <?php elseif ($products): ?>
                 <div class="table-wrap">
                     <table class="products">
@@ -101,7 +101,7 @@ unset($_SESSION['admin_flash']);
                                     </td>
                                     <td>
                                         <div class="row-actions">
-                                            <a class="btn btn--ghost btn--sm" href="edit.php?id=<?= e(urlencode($item['id'])) ?>">Edit</a>
+                                            <a class="btn btn--ghost btn--sm" href="<?= e(admin_url('edit.php')) ?>?id=<?= e(urlencode($item['id'])) ?>">Edit</a>
                                             <form method="post" action="delete.php" onsubmit="return confirm('Delete this product?');">
                                                 <input type="hidden" name="id" value="<?= e($item['id']) ?>">
                                                 <button class="btn btn--danger btn--sm" type="submit">Delete</button>
