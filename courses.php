@@ -25,7 +25,9 @@ $eyebrow = 'Courses Running';
 
     <?php include __DIR__ . '/sections/whatsapp-cta.php'; ?>
 
-    <section class="section section--cream" aria-labelledby="testimonials-heading">
+    <?php include __DIR__ . '/sections/student-work-masonry.php'; ?>
+
+    <section class="section" aria-labelledby="testimonials-heading">
         <div class="container">
             <div class="section-intro reveal">
                 <p class="eyebrow">From the studio table</p>

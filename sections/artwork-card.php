@@ -14,7 +14,7 @@ $placeholder_ratio = 'portrait';
 $description = $item['description'] ?? ($item['story'] ?? '');
 $is_gallery = $context === 'gallery';
 $is_shop = in_array($context, ['original', 'print'], true);
-$detail_url = product_url((string) ($item['id'] ?? ''));
+$detail_url = product_url((string) ($item['id'] ?? ''), $is_shop ? $context : 'original');
 
 if ($status === 'sold') {
     return;
@@ -26,11 +26,15 @@ $active_key = isset($sizes[$default_size]) ? $default_size : array_key_first($si
 $active = ($active_key !== null && isset($sizes[$active_key])) ? $sizes[$active_key] : null;
 $show_bestseller_badge = !empty($show_bestseller_badge);
 
-$display_price = (float) ($active['price'] ?? 0);
-$display_was = (float) ($active['compare_at'] ?? 0);
 if ($context === 'print') {
-    $display_price = print_price($display_price);
-    $display_was = $display_was > 0 ? print_price($display_was) : 0;
+    $display_price = (float) ($active['price'] ?? 0);
+    $display_was = (float) ($active['compare_at'] ?? 0);
+    $size_hint = $active_key ? ('From size ' . $active_key) : 'Print';
+} else {
+    $display_price = (float) ($item['original_price'] ?? ($active['price'] ?? 0));
+    $display_was = (float) ($item['original_compare_at'] ?? 0);
+    $dims = trim((string) ($item['original_dimensions'] ?? ''));
+    $size_hint = $dims !== '' ? $dims : (defined('DEFAULT_ORIGINAL_DIMENSIONS') ? DEFAULT_ORIGINAL_DIMENSIONS : '10 inch × 13 inch');
 }
 ?>
 <article class="art-card<?= ($is_shop || $is_gallery) ? ' art-card--product' : '' ?><?= $is_gallery ? ' art-card--tile' : '' ?> reveal" id="<?= e($item['id'] ?? '') ?>">
@@ -52,8 +56,8 @@ if ($context === 'print') {
                     <p class="art-card__story art-card__story--compact"><?= e($description) ?></p>
                 <?php endif; ?>
 
-                <?php if ($is_shop && $active): ?>
-                    <p class="art-card__size-hint">From size <?= e((string) $active_key) ?></p>
+                <?php if ($is_shop && $display_price > 0): ?>
+                    <p class="art-card__size-hint"><?= e($size_hint) ?></p>
                     <div class="art-card__pricing">
                         <?php if ($display_was > $display_price): ?>
                             <span class="art-card__price-was"><?= e(format_money($display_was)) ?></span>

@@ -89,6 +89,28 @@ function products_has_additional_details_column(): bool
     return $has;
 }
 
+function products_has_original_pricing_columns(): bool
+{
+    static $has = null;
+    if ($has !== null) {
+        return $has;
+    }
+
+    $pdo = db();
+    if (!$pdo) {
+        $has = false;
+        return false;
+    }
+
+    try {
+        $has = (bool) $pdo->query("SHOW COLUMNS FROM products LIKE 'original_price'")->fetch();
+    } catch (Throwable $e) {
+        $has = false;
+    }
+
+    return $has;
+}
+
 function products_from_db(bool $includeAll = false): ?array
 {
     $pdo = db();
@@ -98,7 +120,10 @@ function products_from_db(bool $includeAll = false): ?array
 
     try {
         $detailsCol = products_has_additional_details_column() ? 'product_additional_details, ' : '';
-        $sql = "SELECT id, title, description, {$detailsCol}image, image_alt, tags, status, featured, default_size, sort_order
+        $originalCols = products_has_original_pricing_columns()
+            ? 'original_dimensions, original_price, original_compare_at, '
+            : '';
+        $sql = "SELECT id, title, description, {$detailsCol}{$originalCols}image, image_alt, tags, status, featured, default_size, sort_order
              FROM products";
         if (!$includeAll) {
             $sql .= ' WHERE status = \'available\'';
@@ -187,11 +212,29 @@ function map_product_row(array $row, PDOStatement $sizeStmt): array
         $tags = [];
     }
 
+    $fallbackOriginal = (float) ($ordered['A1']['price'] ?? 0);
+    $fallbackCompare = $ordered['A1']['compare_at'] ?? null;
+    $originalPrice = array_key_exists('original_price', $row) && $row['original_price'] !== null
+        ? (float) $row['original_price']
+        : $fallbackOriginal;
+    $originalCompare = array_key_exists('original_compare_at', $row) && $row['original_compare_at'] !== null
+        ? (float) $row['original_compare_at']
+        : ($fallbackCompare !== null ? (float) $fallbackCompare : null);
+    $originalDimensions = trim((string) ($row['original_dimensions'] ?? ''));
+    if ($originalDimensions === '') {
+        $originalDimensions = defined('DEFAULT_ORIGINAL_DIMENSIONS')
+            ? DEFAULT_ORIGINAL_DIMENSIONS
+            : '10 inch × 13 inch';
+    }
+
     return [
         'id' => $row['id'],
         'title' => $row['title'],
         'description' => $row['description'] ?? '',
         'additional_details' => product_additional_details_decode($row['product_additional_details'] ?? ''),
+        'original_dimensions' => $originalDimensions,
+        'original_price' => $originalPrice,
+        'original_compare_at' => $originalCompare,
         'image' => $row['image'],
         'image_alt' => $row['image_alt'] ?? $row['title'],
         'tags' => $tags,
@@ -212,8 +255,11 @@ function product_by_id(string $id): ?array
 
     try {
         $detailsCol = products_has_additional_details_column() ? 'product_additional_details, ' : '';
+        $originalCols = products_has_original_pricing_columns()
+            ? 'original_dimensions, original_price, original_compare_at, '
+            : '';
         $stmt = $pdo->prepare(
-            "SELECT id, title, description, {$detailsCol}image, image_alt, tags, status, featured, default_size, sort_order
+            "SELECT id, title, description, {$detailsCol}{$originalCols}image, image_alt, tags, status, featured, default_size, sort_order
              FROM products WHERE id = ? LIMIT 1"
         );
         $stmt->execute([$id]);
@@ -367,13 +413,37 @@ function product_save(array $data, bool $isNew = false): ?string
     $defaultSize = size_store_code((string) ($data['default_size'] ?? 'A1'));
     $sortOrder = (int) ($data['sort_order'] ?? 0);
 
+    $originalDimensions = trim((string) ($data['original_dimensions'] ?? ''));
+    if ($originalDimensions === '') {
+        $originalDimensions = defined('DEFAULT_ORIGINAL_DIMENSIONS')
+            ? DEFAULT_ORIGINAL_DIMENSIONS
+            : '10 inch × 13 inch';
+    }
+    $originalPrice = isset($data['original_price']) && $data['original_price'] !== ''
+        ? (float) $data['original_price']
+        : 0.0;
+    $originalCompare = isset($data['original_compare_at']) && $data['original_compare_at'] !== ''
+        ? (float) $data['original_compare_at']
+        : null;
+
     $tags = $data['tags'] ?? [];
     if (!is_array($tags)) {
         $tags = [];
     }
     $allowedTags = array_merge(['original', 'print'], array_keys(shop_categories()));
     $tags = array_values(array_intersect($tags, $allowedTags));
+    if ($tags === []) {
+        $GLOBALS['_db_last_error'] = 'Select at least Original or Print.';
+        return null;
+    }
     $tagsJson = json_encode($tags, JSON_UNESCAPED_UNICODE);
+    $isOriginal = in_array('original', $tags, true);
+    $isPrint = in_array('print', $tags, true);
+
+    if ($isOriginal && products_has_original_pricing_columns() && $originalPrice <= 0) {
+        $GLOBALS['_db_last_error'] = 'Original price is required.';
+        return null;
+    }
 
     $sizeMeta = [
         'S' => 'A1',
@@ -381,6 +451,26 @@ function product_save(array $data, bool $isNew = false): ?string
         'L' => 'A3',
     ];
     $sizesIn = is_array($data['sizes'] ?? null) ? $data['sizes'] : [];
+
+    if ($isPrint) {
+        $hasPrintPrice = false;
+        foreach ($sizeMeta as $display) {
+            $row = $sizesIn[$display] ?? [];
+            if ((float) ($row['price'] ?? 0) > 0) {
+                $hasPrintPrice = true;
+                break;
+            }
+        }
+        if (!$hasPrintPrice) {
+            $GLOBALS['_db_last_error'] = 'Add at least one print size price (A1, A2, or A3).';
+            return null;
+        }
+    }
+
+    if (!products_has_original_pricing_columns()) {
+        $GLOBALS['_db_last_error'] = 'Run database/purchase-redesign.sql first to add original price and dimensions.';
+        return null;
+    }
 
     try {
         $pdo->beginTransaction();
@@ -400,21 +490,25 @@ function product_save(array $data, bool $isNew = false): ?string
             }
 
             $ins = $pdo->prepare(
-                'INSERT INTO products (id, title, description, product_additional_details, image, image_alt, tags, status, featured, default_size, sort_order)
-                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
+                'INSERT INTO products (id, title, description, product_additional_details, original_dimensions, original_price, original_compare_at, image, image_alt, tags, status, featured, default_size, sort_order)
+                 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)'
             );
             $ins->execute([
-                $id, $title, $description, $additionalDetails, $image, $imageAlt, $tagsJson,
+                $id, $title, $description, $additionalDetails,
+                $originalDimensions, $originalPrice, $originalCompare,
+                $image, $imageAlt, $tagsJson,
                 $status, $featured, $defaultSize, $sortOrder,
             ]);
         } else {
             $upd = $pdo->prepare(
                 'UPDATE products
-                 SET title = ?, description = ?, product_additional_details = ?, image = ?, image_alt = ?, tags = ?, status = ?, featured = ?, default_size = ?, sort_order = ?
+                 SET title = ?, description = ?, product_additional_details = ?, original_dimensions = ?, original_price = ?, original_compare_at = ?, image = ?, image_alt = ?, tags = ?, status = ?, featured = ?, default_size = ?, sort_order = ?
                  WHERE id = ?'
             );
             $upd->execute([
-                $title, $description, $additionalDetails, $image, $imageAlt, $tagsJson,
+                $title, $description, $additionalDetails,
+                $originalDimensions, $originalPrice, $originalCompare,
+                $image, $imageAlt, $tagsJson,
                 $status, $featured, $defaultSize, $sortOrder, $id,
             ]);
             if ($upd->rowCount() === 0) {
@@ -435,8 +529,8 @@ function product_save(array $data, bool $isNew = false): ?string
 
         foreach ($sizeMeta as $storeCode => $display) {
             $row = $sizesIn[$display] ?? $sizesIn[$storeCode] ?? [];
-            $price = isset($row['price']) ? (float) $row['price'] : 0;
-            $compare = isset($row['compare_at']) && $row['compare_at'] !== ''
+            $price = $isPrint && isset($row['price']) ? (float) $row['price'] : 0.0;
+            $compare = $isPrint && isset($row['compare_at']) && $row['compare_at'] !== ''
                 ? (float) $row['compare_at']
                 : null;
             $upsertSize->execute([$id, $storeCode, $display, $price, $compare]);
@@ -464,7 +558,7 @@ function product_additional_details_defaults(): array
     return [
         [
             'title' => 'Size and quality',
-            'body' => 'Dimension: 10 inch × 13 inch. Print quality: the artwork is printed on 300 GSM thick paper with a high quality printer and vibrant colours, to give it a rich look. Item shape: rectangular. Frame material: engineered wood.',
+            'body' => 'Originals: see the listed dimensions on each piece (default 10 inch × 13 inch). Prints: choose A1, A2, or A3. Print quality: 300 GSM thick paper with vibrant colours. Item shape: rectangular. Frame material: engineered wood.',
         ],
         [
             'title' => 'Great for gifting',

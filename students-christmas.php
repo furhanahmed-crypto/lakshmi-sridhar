@@ -1,3 +1,4 @@
 <?php
 require_once __DIR__ . '/includes/config.php';
-shop_legacy_category_redirect('students-christmas');
+header('Location: ' . page_url('courses.php') . '#student-work', true, 301);
+exit;

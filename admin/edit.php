@@ -50,6 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             'title' => trim((string) ($_POST['title'] ?? '')),
             'description' => trim((string) ($_POST['description'] ?? '')),
             'additional_details' => $additionalDetails,
+            'original_dimensions' => trim((string) ($_POST['original_dimensions'] ?? DEFAULT_ORIGINAL_DIMENSIONS)),
+            'original_price' => $_POST['original_price'] ?? 0,
+            'original_compare_at' => $_POST['original_compare_at'] ?? '',
             'image' => $uploaded ?: $currentImage,
             'image_alt' => trim((string) ($_POST['image_alt'] ?? '')),
             'status' => ($_POST['status'] ?? 'available') === 'sold' ? 'sold' : 'available',
@@ -87,6 +90,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'title' => trim((string) ($_POST['title'] ?? '')),
         'description' => trim((string) ($_POST['description'] ?? '')),
         'additional_details' => $additionalDetails ?? [],
+        'original_dimensions' => trim((string) ($_POST['original_dimensions'] ?? DEFAULT_ORIGINAL_DIMENSIONS)),
+        'original_price' => (float) ($_POST['original_price'] ?? 0),
+        'original_compare_at' => ($_POST['original_compare_at'] ?? '') !== '' ? (float) $_POST['original_compare_at'] : null,
         'image' => $uploaded ?: $currentImage,
         'image_alt' => trim((string) ($_POST['image_alt'] ?? '')),
         'status' => ($_POST['status'] ?? 'available') === 'sold' ? 'sold' : 'available',
@@ -106,6 +112,9 @@ $product = $product ?? [
     'title' => '',
     'description' => '',
     'additional_details' => product_additional_details_defaults(),
+    'original_dimensions' => DEFAULT_ORIGINAL_DIMENSIONS,
+    'original_price' => 89,
+    'original_compare_at' => 129,
     'image_alt' => '',
     'status' => 'available',
     'featured' => false,
@@ -113,9 +122,9 @@ $product = $product ?? [
     'sort_order' => 0,
     'tags' => ['original', 'print'],
     'sizes' => [
-        'A1' => ['label' => 'A1', 'price' => 89, 'compare_at' => 129],
-        'A2' => ['label' => 'A2', 'price' => 119, 'compare_at' => 159],
-        'A3' => ['label' => 'A3', 'price' => 149, 'compare_at' => 199],
+        'A1' => ['label' => 'A1', 'price' => 45, 'compare_at' => 65],
+        'A2' => ['label' => 'A2', 'price' => 60, 'compare_at' => 80],
+        'A3' => ['label' => 'A3', 'price' => 75, 'compare_at' => 100],
     ],
 ];
 
@@ -129,9 +138,16 @@ while (count($additionalDetails) < 4) {
 }
 
 $tags = $product['tags'] ?? [];
+$isOriginal = in_array('original', $tags, true);
+$isPrint = in_array('print', $tags, true);
 $a1 = $product['sizes']['A1'] ?? $product['sizes']['S'] ?? ['price' => 0, 'compare_at' => null];
 $a2 = $product['sizes']['A2'] ?? $product['sizes']['M'] ?? ['price' => 0, 'compare_at' => null];
 $a3 = $product['sizes']['A3'] ?? $product['sizes']['L'] ?? ['price' => 0, 'compare_at' => null];
+$sizeFields = [
+    'A1' => [$a1, 'price_a1', 'compare_a1'],
+    'A2' => [$a2, 'price_a2', 'compare_a2'],
+    'A3' => [$a3, 'price_a3', 'compare_a3'],
+];
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -146,145 +162,249 @@ $a3 = $product['sizes']['A3'] ?? $product['sizes']['L'] ?? ['price' => 0, 'compa
 </head>
 <body class="admin">
     <?php $admin_nav = 'edit'; include __DIR__ . '/header.php'; ?>
-    <div class="admin-shell">
-        <div class="admin-top">
+
+    <div class="admin-shell edit-shell">
+        <div class="admin-top edit-top">
             <div>
+                <p class="edit-kicker"><?= $isNew ? 'Catalogue' : 'Editing' ?></p>
                 <h1><?= $isNew ? 'Add product' : 'Edit product' ?></h1>
-                <p><?= $isNew ? 'Create a new catalogue item' : e($product['title'] ?? '') ?></p>
+                <p><?= $isNew ? 'Fill the sections in order. Only Original and/or Print pricing appears after you choose how to sell it.' : e($product['title'] ?? '') ?></p>
             </div>
+            <a class="btn btn--ghost btn--sm" href="<?= e(admin_url('products.php')) ?>">Back to products</a>
         </div>
 
         <?php if ($error): ?>
             <p class="flash flash--error"><?= e($error) ?></p>
         <?php endif; ?>
 
-        <form class="panel" method="post" enctype="multipart/form-data">
-            <div class="form-grid">
-                <div class="field">
-                    <label for="title">Title</label>
-                    <input id="title" name="title" required value="<?= e($product['title'] ?? '') ?>">
-                </div>
-
-                <div class="field">
-                    <label for="description">Description</label>
-                    <textarea id="description" name="description"><?= e($product['description'] ?? '') ?></textarea>
-                </div>
-
-                <div class="field">
-                    <label for="image">Product image</label>
-                    <div class="image-preview<?= empty($product['image']) ? ' is-empty' : '' ?>" data-image-preview>
-                        <img
-                            src="<?= !empty($product['image']) ? e(asset($product['image'])) : '' ?>"
-                            alt="<?= e($product['image_alt'] ?? $product['title'] ?? '') ?>"
-                            data-image-preview-img
-                            <?= empty($product['image']) ? 'hidden' : '' ?>
-                        >
-                        <span class="image-preview__placeholder" data-image-preview-placeholder<?= !empty($product['image']) ? ' hidden' : '' ?>>No image</span>
+        <form class="edit-form" method="post" enctype="multipart/form-data" data-product-form>
+            <section class="edit-card">
+                <header class="edit-card__header">
+                    <span class="edit-card__step">1</span>
+                    <div>
+                        <h2>Product details</h2>
+                        <p>Name and short description shown on the shop cards and product page.</p>
                     </div>
-                    <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp" data-image-input>
-                    <p class="field-hint" data-image-preview-status><?= $isNew ? 'Saved as-is into assets/images/artwork/ using your filename · JPG, PNG, or WebP · max 5MB' : 'Leave empty to keep current image. New upload keeps your exact filename in artwork/ · JPG, PNG, or WebP · max 5MB' ?></p>
-                </div>
-
-                <div class="form-grid form-grid--2" style="padding:0;gap:1rem;">
+                </header>
+                <div class="edit-card__body">
                     <div class="field">
-                        <label for="image_alt">Image alt text</label>
-                        <input id="image_alt" name="image_alt" value="<?= e($product['image_alt'] ?? '') ?>">
+                        <label for="title">Title</label>
+                        <input id="title" name="title" required value="<?= e($product['title'] ?? '') ?>" placeholder="e.g. The Reader">
                     </div>
-                    <div class="field">
-                        <label for="sort_order">Sort order</label>
-                        <input id="sort_order" name="sort_order" type="number" value="<?= e((string) ($product['sort_order'] ?? 0)) ?>">
-                    </div>
-                </div>
-
-                <div class="form-grid form-grid--2" style="padding:0;gap:1rem;">
-                    <div class="field">
-                        <label for="status">Status</label>
-                        <select id="status" name="status">
-                            <option value="available" <?= ($product['status'] ?? '') === 'available' ? 'selected' : '' ?>>Available</option>
-                            <option value="sold" <?= ($product['status'] ?? '') === 'sold' ? 'selected' : '' ?>>Sold</option>
-                        </select>
-                    </div>
-                    <div class="field">
-                        <label for="default_size">Default size</label>
-                        <select id="default_size" name="default_size">
-                            <?php foreach (['A1', 'A2', 'A3'] as $code): ?>
-                                <option value="<?= $code ?>" <?= ($product['default_size'] ?? 'A1') === $code ? 'selected' : '' ?>><?= $code ?></option>
-                            <?php endforeach; ?>
-                        </select>
+                    <div class="field field--flush">
+                        <label for="description">Description</label>
+                        <textarea id="description" name="description" rows="3" placeholder="One or two sentences about the piece"><?= e($product['description'] ?? '') ?></textarea>
                     </div>
                 </div>
+            </section>
 
-                <div class="field">
-                    <label>Visibility</label>
-                    <div class="check-row">
-                        <label><input type="checkbox" name="featured" value="1" <?= !empty($product['featured']) ? 'checked' : '' ?>> Featured on home</label>
-                        <label><input type="checkbox" name="tag_original" value="1" <?= in_array('original', $tags, true) ? 'checked' : '' ?>> Original</label>
-                        <label><input type="checkbox" name="tag_print" value="1" <?= in_array('print', $tags, true) ? 'checked' : '' ?>> Print</label>
+            <section class="edit-card">
+                <header class="edit-card__header">
+                    <span class="edit-card__step">2</span>
+                    <div>
+                        <h2>How it is sold</h2>
+                        <p>Choose Original, Print, or both. Pricing sections below match this choice.</p>
+                    </div>
+                </header>
+                <div class="edit-card__body">
+                    <div class="sell-as" role="group" aria-label="Sell as">
+                        <label class="sell-as__option">
+                            <input type="checkbox" name="tag_original" value="1" data-type-toggle="original" <?= $isOriginal ? 'checked' : '' ?>>
+                            <span class="sell-as__box">
+                                <strong>Original</strong>
+                                <small>One physical size + one price on /purchase/originals</small>
+                            </span>
+                        </label>
+                        <label class="sell-as__option">
+                            <input type="checkbox" name="tag_print" value="1" data-type-toggle="print" <?= $isPrint ? 'checked' : '' ?>>
+                            <span class="sell-as__box">
+                                <strong>Print</strong>
+                                <small>A1 / A2 / A3 prices on /purchase/prints</small>
+                            </span>
+                        </label>
+                    </div>
+
+                    <div class="edit-row edit-row--3">
+                        <div class="field">
+                            <label for="category">Collection</label>
+                            <select id="category" name="category">
+                                <option value="">None</option>
+                                <?php foreach (shop_categories() as $slug => $cat): ?>
+                                    <option value="<?= e($slug) ?>" <?= in_array($slug, $tags, true) ? 'selected' : '' ?>><?= e($cat['label']) ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="status">Availability</label>
+                            <select id="status" name="status">
+                                <option value="available" <?= ($product['status'] ?? '') === 'available' ? 'selected' : '' ?>>Available</option>
+                                <option value="sold" <?= ($product['status'] ?? '') === 'sold' ? 'selected' : '' ?>>Sold</option>
+                            </select>
+                        </div>
+                        <div class="field">
+                            <label for="sort_order">Sort order</label>
+                            <input id="sort_order" name="sort_order" type="number" value="<?= e((string) ($product['sort_order'] ?? 0)) ?>">
+                            <p class="field-hint">Lower numbers appear first.</p>
+                        </div>
+                    </div>
+
+                    <label class="edit-check">
+                        <input type="checkbox" name="featured" value="1" <?= !empty($product['featured']) ? 'checked' : '' ?>>
+                        <span>Featured on the home page</span>
+                    </label>
+                </div>
+            </section>
+
+            <section class="edit-card">
+                <header class="edit-card__header">
+                    <span class="edit-card__step">3</span>
+                    <div>
+                        <h2>Artwork image</h2>
+                        <p>Preview updates as soon as you pick a file. Click Save to upload it.</p>
+                    </div>
+                </header>
+                <div class="edit-card__body">
+                    <div class="image-layout">
+                        <div class="image-preview<?= empty($product['image']) ? ' is-empty' : '' ?>" data-image-preview>
+                            <img
+                                src="<?= !empty($product['image']) ? e(asset($product['image'])) : '' ?>"
+                                alt="<?= e($product['image_alt'] ?? $product['title'] ?? '') ?>"
+                                data-image-preview-img
+                                <?= empty($product['image']) ? 'hidden' : '' ?>
+                            >
+                            <span class="image-preview__placeholder" data-image-preview-placeholder<?= !empty($product['image']) ? ' hidden' : '' ?>>No image</span>
+                        </div>
+                        <div class="image-layout__fields">
+                            <div class="field">
+                                <label for="image">Upload image</label>
+                                <input id="image" name="image" type="file" accept="image/jpeg,image/png,image/webp" data-image-input>
+                                <p class="field-hint" data-image-preview-status><?= $isNew ? 'JPG, PNG, or WebP · max 5MB' : 'Leave empty to keep the current image · JPG, PNG, or WebP · max 5MB' ?></p>
+                            </div>
+                            <div class="field field--flush">
+                                <label for="image_alt">Alt text</label>
+                                <input id="image_alt" name="image_alt" value="<?= e($product['image_alt'] ?? '') ?>" placeholder="Short description for accessibility / SEO">
+                            </div>
+                        </div>
                     </div>
                 </div>
+            </section>
 
-                <div class="field">
-                    <label for="category">Collection</label>
-                    <select id="category" name="category">
-                        <option value="">None</option>
-                        <?php foreach (shop_categories() as $slug => $cat): ?>
-                            <option value="<?= e($slug) ?>" <?= in_array($slug, $tags, true) ? 'selected' : '' ?>><?= e($cat['label']) ?></option>
-                        <?php endforeach; ?>
-                    </select>
+            <section class="edit-card" data-panel="original" <?= $isOriginal ? '' : 'hidden' ?>>
+                <header class="edit-card__header">
+                    <span class="edit-card__step">4</span>
+                    <div>
+                        <h2>Original pricing</h2>
+                        <p>Used only for originals — one dimension and one price.</p>
+                    </div>
+                </header>
+                <div class="edit-card__body">
+                    <div class="edit-row edit-row--3">
+                        <div class="field">
+                            <label for="original_dimensions">Dimensions</label>
+                            <input id="original_dimensions" name="original_dimensions" value="<?= e($product['original_dimensions'] ?? DEFAULT_ORIGINAL_DIMENSIONS) ?>" placeholder="<?= e(DEFAULT_ORIGINAL_DIMENSIONS) ?>">
+                        </div>
+                        <div class="field">
+                            <label for="original_price">Price (€)</label>
+                            <input id="original_price" name="original_price" type="number" min="0" step="1" value="<?= e((string) (int) ($product['original_price'] ?? 0)) ?>">
+                        </div>
+                        <div class="field">
+                            <label for="original_compare_at">Compare-at price (€)</label>
+                            <input id="original_compare_at" name="original_compare_at" type="number" min="0" step="1" value="<?= e(($product['original_compare_at'] ?? '') !== '' && $product['original_compare_at'] !== null ? (string) (int) $product['original_compare_at'] : '') ?>" placeholder="Optional">
+                            <p class="field-hint">Shown struck-through when higher than price.</p>
+                        </div>
+                    </div>
                 </div>
+            </section>
 
-                <div class="field">
-                    <label>Original size prices (print is 50% of these)</label>
-                    <div class="sizes-grid">
-                        <?php
-                        $sizeFields = [
-                            'A1' => [$a1, 'price_a1', 'compare_a1'],
-                            'A2' => [$a2, 'price_a2', 'compare_a2'],
-                            'A3' => [$a3, 'price_a3', 'compare_a3'],
-                        ];
-                        foreach ($sizeFields as $code => [$size, $priceName, $compareName]):
-                        ?>
-                            <div class="size-card">
+            <section class="edit-card" data-panel="print" <?= $isPrint ? '' : 'hidden' ?>>
+                <header class="edit-card__header">
+                    <span class="edit-card__step">5</span>
+                    <div>
+                        <h2>Print pricing</h2>
+                        <p>Used only for prints — set A1, A2, and A3 separately.</p>
+                    </div>
+                </header>
+                <div class="edit-card__body">
+                    <div class="edit-row edit-row--3 edit-row--default-size">
+                        <div class="field">
+                            <label for="default_size">Default size on cards</label>
+                            <select id="default_size" name="default_size">
+                                <?php foreach (['A1', 'A2', 'A3'] as $code): ?>
+                                    <option value="<?= $code ?>" <?= ($product['default_size'] ?? 'A1') === $code ? 'selected' : '' ?>><?= $code ?></option>
+                                <?php endforeach; ?>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="print-sizes">
+                        <?php foreach ($sizeFields as $code => [$size, $priceName, $compareName]): ?>
+                            <article class="print-size">
                                 <h3><?= e($code) ?></h3>
                                 <div class="field">
                                     <label for="<?= e($priceName) ?>">Price (€)</label>
-                                    <input id="<?= e($priceName) ?>" name="<?= e($priceName) ?>" type="number" min="0" step="1" required value="<?= e((string) (int) ($size['price'] ?? 0)) ?>">
+                                    <input id="<?= e($priceName) ?>" name="<?= e($priceName) ?>" type="number" min="0" step="1" value="<?= e((string) (int) ($size['price'] ?? 0)) ?>">
                                 </div>
-                                <div class="field" style="margin-bottom:0;">
-                                    <label for="<?= e($compareName) ?>">Compare at (€)</label>
-                                    <input id="<?= e($compareName) ?>" name="<?= e($compareName) ?>" type="number" min="0" step="1" value="<?= e($size['compare_at'] !== null && $size['compare_at'] !== '' ? (string) (int) $size['compare_at'] : '') ?>">
+                                <div class="field field--flush">
+                                    <label for="<?= e($compareName) ?>">Compare-at (€)</label>
+                                    <input id="<?= e($compareName) ?>" name="<?= e($compareName) ?>" type="number" min="0" step="1" value="<?= e($size['compare_at'] !== null && $size['compare_at'] !== '' ? (string) (int) $size['compare_at'] : '') ?>" placeholder="Optional">
                                 </div>
-                            </div>
+                            </article>
                         <?php endforeach; ?>
                     </div>
                 </div>
+            </section>
 
-                <div class="field additional-details" style="margin-bottom:0;">
-                    <label>Product additional details</label>
-                    <p class="field-hint">Shown on this product’s page. Same starting copy on every product — change any section here without affecting the others.</p>
-                    <?php foreach ($additionalDetails as $i => $section): ?>
-                        <div class="additional-card">
-                            <div class="field">
-                                <label for="detail-title-<?= (int) $i ?>">Section <?= (int) $i + 1 ?> heading</label>
-                                <input id="detail-title-<?= (int) $i ?>" name="additional_details[<?= (int) $i ?>][title]" value="<?= e($section['title'] ?? '') ?>">
-                            </div>
-                            <div class="field" style="margin-bottom:0;">
-                                <label for="detail-body-<?= (int) $i ?>">Section <?= (int) $i + 1 ?> text</label>
-                                <textarea id="detail-body-<?= (int) $i ?>" name="additional_details[<?= (int) $i ?>][body]" rows="5"><?= e($section['body'] ?? '') ?></textarea>
-                            </div>
-                        </div>
-                    <?php endforeach; ?>
+            <section class="edit-card">
+                <header class="edit-card__header">
+                    <span class="edit-card__step">6</span>
+                    <div>
+                        <h2>Extra product details</h2>
+                        <p>Optional info blocks under the buy button on the product page.</p>
+                    </div>
+                </header>
+                <div class="edit-card__body">
+                    <div class="detail-grid">
+                        <?php foreach ($additionalDetails as $i => $section): ?>
+                            <article class="detail-block">
+                                <p class="detail-block__label">Section <?= (int) $i + 1 ?></p>
+                                <div class="field">
+                                    <label for="detail-title-<?= (int) $i ?>">Heading</label>
+                                    <input id="detail-title-<?= (int) $i ?>" name="additional_details[<?= (int) $i ?>][title]" value="<?= e($section['title'] ?? '') ?>">
+                                </div>
+                                <div class="field field--flush">
+                                    <label for="detail-body-<?= (int) $i ?>">Text</label>
+                                    <textarea id="detail-body-<?= (int) $i ?>" name="additional_details[<?= (int) $i ?>][body]" rows="3"><?= e($section['body'] ?? '') ?></textarea>
+                                </div>
+                            </article>
+                        <?php endforeach; ?>
+                    </div>
                 </div>
-            </div>
+            </section>
 
-            <div class="form-footer">
+            <div class="edit-actions">
                 <button class="btn btn--primary" type="submit"><?= $isNew ? 'Add product' : 'Save changes' ?></button>
                 <a class="btn btn--ghost" href="<?= e(admin_url('products.php')) ?>">Cancel</a>
             </div>
         </form>
     </div>
+
     <script>
     (function () {
+      var form = document.querySelector("[data-product-form]");
+      if (form) {
+        function syncPanels() {
+          var originalOn = !!form.querySelector('[data-type-toggle="original"]:checked');
+          var printOn = !!form.querySelector('[data-type-toggle="print"]:checked');
+          var originalPanel = form.querySelector('[data-panel="original"]');
+          var printPanel = form.querySelector('[data-panel="print"]');
+          if (originalPanel) originalPanel.hidden = !originalOn;
+          if (printPanel) printPanel.hidden = !printOn;
+        }
+        form.querySelectorAll("[data-type-toggle]").forEach(function (el) {
+          el.addEventListener("change", syncPanels);
+        });
+        syncPanels();
+      }
+
       var input = document.querySelector("[data-image-input]");
       var wrap = document.querySelector("[data-image-preview]");
       var img = document.querySelector("[data-image-preview-img]");

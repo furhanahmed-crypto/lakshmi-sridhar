@@ -19,8 +19,9 @@ define('WHATSAPP_NUMBER', '353894413077'); // digits only for wa.me
 define('WHATSAPP_URL', 'https://wa.me/' . WHATSAPP_NUMBER);
 define('CONTACT_EMAIL', 'Lakshmi.Sridharj@gmail.com');
 
-define('ASSET_VERSION', '2.2.9');
-define('PRINT_PRICE_RATIO', 0.5);
+define('ASSET_VERSION', '2.3.1');
+define('PRINT_PRICE_RATIO', 0.5); // legacy helper only; print prices are stored in product_sizes
+define('DEFAULT_ORIGINAL_DIMENSIONS', '10 inch × 13 inch');
 
 require_once __DIR__ . '/db.php';
 
@@ -33,7 +34,7 @@ function format_money(int|float $amount): string
 }
 
 /**
- * Print price is 50% of the stored original price.
+ * @deprecated Print prices are stored on product_sizes; kept for old call sites.
  */
 function print_price(int|float $original): float
 {
@@ -41,17 +42,18 @@ function print_price(int|float $original): float
 }
 
 /**
- * Product detail URL.
+ * Product detail URL under /purchase/originals or /purchase/prints.
  */
-function product_url(string $id): string
+function product_url(string $id, string $context = 'original'): string
 {
-    return page_url('product.php') . '?id=' . rawurlencode($id);
+    $root = strtolower($context) === 'print' ? 'prints' : 'originals';
+    return page_url('purchase/' . $root . '/product.php') . '?id=' . rawurlencode($id);
 }
 
 /**
- * Purchase collections (folder slug → page).
+ * Purchase collections (folder slug → page under /purchase/{originals|prints}/).
  *
- * @return array<string, array{label:string, page:string, folder:string, description:string, lede:string, image:string}>
+ * @return array<string, array<string, string>>
  */
 function shop_categories(): array
 {
@@ -80,15 +82,13 @@ function shop_categories(): array
             'lede' => 'Human portraits that hold a feeling, a moment, and a story — drawn by hand from the studio.',
             'image' => 'images/artwork/portraits/old-man-1.jpeg',
         ],
-        'students-christmas' => [
-            'label' => "Students' Christmas",
-            'filter_label' => 'Children',
-            'query' => 'children',
-            'page' => 'children.php',
-            'folder' => 'students-christmas-cards-2026',
-            'description' => "Students' Christmas cards 2026 — artwork from Lakshmi's classes.",
-            'lede' => 'A festive collection from the 2026 student Christmas cards — tap a piece for sizes and to buy as an original or a print.',
-            'image' => 'images/artwork/students-christmas-cards-2026/parrot-1.jpeg',
+        'terracotta' => [
+            'label' => 'Terracotta',
+            'page' => 'terracotta.php',
+            'folder' => '',
+            'description' => 'Terracotta collection by Lakshmi Sridhar — warm studies coming to the shop.',
+            'lede' => 'A terracotta collection is taking shape. Check back shortly, or browse another collection in the meantime.',
+            'image' => '',
         ],
         'christmas-2026-cards' => [
             'label' => 'Christmas 2026 Cards',
@@ -107,8 +107,8 @@ function shop_categories(): array
 function shop_filter_tag(string $query): string
 {
     $query = strtolower(trim($query));
-    if ($query === 'children' || $query === 'students-christmas') {
-        return 'students-christmas';
+    if (in_array($query, ['children', 'students-christmas'], true)) {
+        return ''; // retired from shop — gallery lives on Courses
     }
     if (in_array($query, ['christmas', 'christmas-2026', 'christmas-2026-cards'], true)) {
         return 'christmas-2026-cards';
@@ -122,28 +122,33 @@ function shop_filter_tag(string $query): string
 function shop_root_from_page(string $page): string
 {
     $page = strtolower(ltrim($page, '/'));
-    if ($page === 'prints.php' || str_starts_with($page, 'prints/')) {
+    if (
+        $page === 'prints.php'
+        || str_starts_with($page, 'prints/')
+        || str_starts_with($page, 'purchase/prints')
+    ) {
         return 'prints';
     }
     return 'originals';
 }
 
 /**
- * Unique listing path: originals.php, prints/animals.php, originals/children.php.
+ * Listing path under purchase/: purchase/originals/, purchase/prints/animals.php, …
  */
 function shop_category_path(string $root, string $category = ''): string
 {
     $root = $root === 'prints' ? 'prints' : 'originals';
+    $base = 'purchase/' . $root;
     $tag = shop_filter_tag($category);
     if ($tag === '') {
-        return $root . '.php';
+        return $base . '/';
     }
     $file = shop_categories()[$tag]['page'] ?? '';
-    return $file !== '' ? $root . '/' . $file : $root . '.php';
+    return $file !== '' ? $base . '/' . $file : $base . '/';
 }
 
 /**
- * Shop listing URL. Category lives under /originals/ or /prints/; search stays as ?q=.
+ * Shop listing URL. Search stays as ?q=.
  */
 function shop_list_url(string $page = 'originals.php', string $category = '', string $q = ''): string
 {
@@ -154,12 +159,17 @@ function shop_list_url(string $page = 'originals.php', string $category = '', st
 }
 
 /**
- * Send old category URLs to /originals/{page} or /prints/{page}.
+ * Send old category URLs into /purchase/{originals|prints}/…
  */
 function shop_legacy_category_redirect(string $category, string $root = 'originals.php'): void
 {
     $q = trim((string) ($_GET['q'] ?? ''));
-    header('Location: ' . shop_list_url($root, $category, $q), true, 301);
+    $tag = shop_filter_tag($category);
+    if ($tag === '') {
+        header('Location: ' . page_url('courses.php') . '#student-work', true, 301);
+        exit;
+    }
+    header('Location: ' . shop_list_url($root, $tag, $q), true, 301);
     exit;
 }
 
@@ -173,16 +183,71 @@ function shop_is_purchase_page(string $page): bool
 }
 
 /**
- * Available products tagged with a collection slug.
+ * Available products for a shop context (original|print), optionally filtered by collection.
+ *
+ * @return array<int, array<string, mixed>>
+ */
+function products_for_shop(string $context, string $category = ''): array
+{
+    $tag = $context === 'print' ? 'print' : 'original';
+    $category = shop_filter_tag($category);
+
+    return array_values(array_filter(products(), function ($item) use ($tag, $category) {
+        if (($item['status'] ?? 'available') === 'sold') {
+            return false;
+        }
+        $tags = $item['tags'] ?? [];
+        if (!in_array($tag, $tags, true)) {
+            return false;
+        }
+        if ($category !== '' && !in_array($category, $tags, true)) {
+            return false;
+        }
+        return true;
+    }));
+}
+
+/**
+ * Available products tagged with a collection slug (any type).
  *
  * @return array<int, array<string, mixed>>
  */
 function products_in_category(string $category): array
 {
+    $category = shop_filter_tag($category);
+    if ($category === '') {
+        return [];
+    }
     return array_values(array_filter(products(), function ($item) use ($category) {
         return ($item['status'] ?? 'available') !== 'sold'
             && in_array($category, $item['tags'] ?? [], true);
     }));
+}
+
+/**
+ * Student / children artwork paths for the Courses masonry (filesystem, not shop).
+ *
+ * @return array<int, array{src:string, alt:string}>
+ */
+function student_work_images(): array
+{
+    $dir = dirname(__DIR__) . '/assets/images/artwork/students-christmas-cards-2026';
+    if (!is_dir($dir)) {
+        return [];
+    }
+    $files = glob($dir . '/*.{jpg,jpeg,png,webp,JPG,JPEG,PNG,WEBP}', GLOB_BRACE) ?: [];
+    sort($files, SORT_NATURAL | SORT_FLAG_CASE);
+    $out = [];
+    foreach ($files as $file) {
+        $name = basename($file);
+        $stem = pathinfo($name, PATHINFO_FILENAME);
+        $label = ucwords(str_replace(['-', '_'], ' ', $stem));
+        $out[] = [
+            'src' => 'images/artwork/students-christmas-cards-2026/' . $name,
+            'alt' => $label . ' — student artwork from Lakshmi’s classes',
+        ];
+    }
+    return $out;
 }
 
 /**

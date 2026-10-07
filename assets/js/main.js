@@ -51,8 +51,7 @@
     if (!sizes || !sizes[sizeKey]) return;
 
     var size = sizes[sizeKey];
-    var originalPrice = Number(size.price) || 0;
-    var printAmount = Math.round(originalPrice * 0.5);
+    var price = Number(size.price) || 0;
     card.setAttribute("data-selected-size", sizeKey);
 
     card.querySelectorAll("[data-size-option]").forEach(function (btn) {
@@ -63,13 +62,11 @@
 
     var priceEl = card.querySelector("[data-price]");
     var wasEl = card.querySelector("[data-price-was]");
-    var originalEl = card.querySelector("[data-price-original]");
     var printEl = card.querySelector("[data-price-print]");
-    if (priceEl) priceEl.textContent = formatMoney(originalPrice);
-    if (originalEl) originalEl.textContent = formatMoney(originalPrice);
-    if (printEl) printEl.textContent = formatMoney(printAmount);
+    if (priceEl) priceEl.textContent = formatMoney(price);
+    if (printEl) printEl.textContent = formatMoney(price);
     if (wasEl) {
-      if (size.compare_at && Number(size.compare_at) > originalPrice) {
+      if (size.compare_at && Number(size.compare_at) > price) {
         wasEl.textContent = formatMoney(size.compare_at);
         wasEl.hidden = false;
       } else {
@@ -83,7 +80,7 @@
     var label = size.label || sizeKey;
     card.querySelectorAll("[data-enquire-link]").forEach(function (link) {
       if (!base) return;
-      var kind = link.getAttribute("data-enquire-type") || "";
+      var kind = link.getAttribute("data-enquire-type") || card.getAttribute("data-product-context") || "";
       var text;
       if (kind === "print") {
         text =

@@ -26,7 +26,7 @@ require __DIR__ . '/includes/header.php';
                 </div>
                 <div class="btn-row reveal">
                     <a class="btn btn--primary" href="<?= page_url('recent-projects.php') ?>">View Recent Projects</a>
-                    <a class="btn btn--secondary" href="<?= page_url('originals.php') ?>">Shop Originals</a>
+                    <a class="btn btn--secondary" href="<?= page_url('purchase/originals/') ?>">Shop Originals</a>
                 </div>
             </div>
             <div class="home-hero__media reveal">
@@ -70,8 +70,8 @@ require __DIR__ . '/includes/header.php';
                     <h3>Bring Art Home</h3>
                     <p>Shop original paintings or archival-quality prints, shipped carefully to your door.</p>
                     <div class="btn-row">
-                        <a class="btn btn--primary btn--sm" href="<?= page_url('originals.php') ?>">Shop Originals</a>
-                        <a class="btn btn--secondary btn--sm" href="<?= page_url('prints.php') ?>">Shop Prints</a>
+                        <a class="btn btn--primary btn--sm" href="<?= page_url('purchase/originals/') ?>">Shop Originals</a>
+                        <a class="btn btn--secondary btn--sm" href="<?= page_url('purchase/prints/') ?>">Shop Prints</a>
                     </div>
                 </article>
             </div>

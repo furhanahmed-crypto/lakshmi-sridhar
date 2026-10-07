@@ -8,8 +8,8 @@ $nav_items = [
         'label' => 'Purchase',
         'slug' => 'purchase',
         'children' => [
-            ['label' => 'Originals', 'slug' => 'originals', 'href' => page_url('originals.php')],
-            ['label' => 'Prints', 'slug' => 'prints', 'href' => page_url('prints.php')],
+            ['label' => 'Originals', 'slug' => 'originals', 'href' => page_url('purchase/originals/')],
+            ['label' => 'Prints', 'slug' => 'prints', 'href' => page_url('purchase/prints/')],
         ],
     ],
     ['label' => 'Contact Us', 'slug' => 'contact', 'href' => page_url('contact.php')],

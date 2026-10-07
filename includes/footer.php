@@ -15,8 +15,8 @@
                 <li><a href="<?= page_url('about.php') ?>">About Us</a></li>
                 <li><a href="<?= page_url('recent-projects.php') ?>">Recent Projects</a></li>
                 <li><a href="<?= page_url('courses.php') ?>">Courses Running</a></li>
-                <li><a href="<?= page_url('originals.php') ?>">Originals</a></li>
-                <li><a href="<?= page_url('prints.php') ?>">Prints</a></li>
+                <li><a href="<?= page_url('purchase/originals/') ?>">Originals</a></li>
+                <li><a href="<?= page_url('purchase/prints/') ?>">Prints</a></li>
                 <li><a href="<?= page_url('contact.php') ?>">Contact Us</a></li>
             </ul>
         </div>
