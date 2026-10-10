@@ -925,28 +925,35 @@ function recent_project_items_save(array $items): bool
 }
 
 /**
+ * Previous Recent Projects behaviour: featured first, then others (max 6).
+ * Best Seller badge follows the product's featured flag until admin overrides.
+ *
+ * @return array<int, array<string, mixed>>
+ */
+function recent_projects_legacy_fallback(): array
+{
+    $available = array_values(array_filter(products(), fn($a) => ($a['status'] ?? 'available') !== 'sold'));
+    $featured = array_values(array_filter($available, fn($a) => !empty($a['featured'])));
+    $rest = array_values(array_filter($available, fn($a) => empty($a['featured'])));
+    $merged = array_slice(array_merge($featured, $rest), 0, 6);
+    foreach ($merged as &$item) {
+        $item['is_bestseller'] = !empty($item['featured']);
+    }
+    unset($item);
+    return $merged;
+}
+
+/**
  * Products selected for the Recent Projects page (with bestseller flag).
+ * If the admin table is missing or still empty, show the legacy studio grid.
  *
  * @return array<int, array<string, mixed>>
  */
 function recent_projects_products(): array
 {
     $picks = recent_project_items_from_db();
-    if ($picks === null) {
-        // Table missing — legacy fallback
-        $available = array_values(array_filter(products(), fn($a) => ($a['status'] ?? 'available') !== 'sold'));
-        $featured = array_values(array_filter($available, fn($a) => !empty($a['featured'])));
-        $rest = array_values(array_filter($available, fn($a) => empty($a['featured'])));
-        $merged = array_slice(array_merge($featured, $rest), 0, 6);
-        foreach ($merged as &$item) {
-            $item['is_bestseller'] = !empty($item['featured']);
-        }
-        unset($item);
-        return $merged;
-    }
-
-    if ($picks === []) {
-        return [];
+    if ($picks === null || $picks === []) {
+        return recent_projects_legacy_fallback();
     }
 
     $byId = [];
@@ -969,5 +976,6 @@ function recent_projects_products(): array
         $out[] = $item;
     }
 
-    return $out;
+    // All picks sold/missing — don't leave the page blank
+    return $out !== [] ? $out : recent_projects_legacy_fallback();
 }

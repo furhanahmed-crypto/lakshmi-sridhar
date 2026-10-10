@@ -54,6 +54,22 @@ foreach ($picks as $pick) {
     $pickMap[(string) $pick['product_id']] = $pick;
 }
 
+// Table exists but nothing saved yet — pre-select the same default grid the site shows
+$usingDefaults = !$tableMissing && $pickMap === [];
+if ($usingDefaults) {
+    foreach (recent_projects_legacy_fallback() as $i => $item) {
+        $pid = (string) ($item['id'] ?? '');
+        if ($pid === '') {
+            continue;
+        }
+        $pickMap[$pid] = [
+            'product_id' => $pid,
+            'sort_order' => ($i + 1) * 10,
+            'is_bestseller' => !empty($item['is_bestseller']) ? 1 : 0,
+        ];
+    }
+}
+
 $products = products_from_db(true) ?? [];
 usort($products, function ($a, $b) use ($pickMap) {
     $aOn = isset($pickMap[(string) $a['id']]);
@@ -99,6 +115,8 @@ usort($products, function ($a, $b) use ($pickMap) {
         <?php endif; ?>
         <?php if ($tableMissing): ?>
             <p class="flash flash--error">Run <code>database/admin-galleries.sql</code> in phpMyAdmin first.</p>
+        <?php elseif (!empty($usingDefaults)): ?>
+            <p class="flash">Showing the previous default Recent Projects selection. Click <strong>Save recent projects</strong> to store it, or change the ticks / Best Seller flags first.</p>
         <?php endif; ?>
 
         <?php if (!$tableMissing): ?>

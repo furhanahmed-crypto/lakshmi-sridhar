@@ -19,7 +19,7 @@ define('WHATSAPP_NUMBER', '353894413077'); // digits only for wa.me
 define('WHATSAPP_URL', 'https://wa.me/' . WHATSAPP_NUMBER);
 define('CONTACT_EMAIL', 'Lakshmi.Sridharj@gmail.com');
 
-define('ASSET_VERSION', '2.3.3');
+define('ASSET_VERSION', '2.3.4');
 define('PRINT_PRICE_RATIO', 0.5); // legacy helper only; print prices are stored in product_sizes
 define('DEFAULT_ORIGINAL_DIMENSIONS', '10 inch × 13 inch');
 
