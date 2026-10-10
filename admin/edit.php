@@ -170,7 +170,10 @@ $sizeFields = [
                 <h1><?= $isNew ? 'Add product' : 'Edit product' ?></h1>
                 <p><?= $isNew ? 'Fill the sections in order. Only Original and/or Print pricing appears after you choose how to sell it.' : e($product['title'] ?? '') ?></p>
             </div>
-            <a class="btn btn--ghost btn--sm" href="<?= e(admin_url('products.php')) ?>">Back to products</a>
+            <div class="admin-actions">
+                <a class="btn btn--ghost btn--sm" href="<?= e(admin_url('products.php')) ?>">Back to products</a>
+                <?php include __DIR__ . '/page-actions.php'; ?>
+            </div>
         </div>
 
         <?php if ($error): ?>
@@ -252,6 +255,7 @@ $sizeFields = [
                         <input type="checkbox" name="featured" value="1" <?= !empty($product['featured']) ? 'checked' : '' ?>>
                         <span>Featured on the home page</span>
                     </label>
+                    <p class="field-hint">Best Seller badges for Recent Projects are managed under Admin → Recent projects.</p>
                 </div>
             </section>
 

@@ -649,3 +649,325 @@ function product_delete(string $id): bool
         return false;
     }
 }
+
+function table_exists(string $table): bool
+{
+    static $cache = [];
+    if (array_key_exists($table, $cache)) {
+        return $cache[$table];
+    }
+
+    $pdo = db();
+    if (!$pdo || !preg_match('/^[a-z0-9_]+$/i', $table)) {
+        $cache[$table] = false;
+        return false;
+    }
+
+    try {
+        $cache[$table] = (bool) $pdo->query("SHOW TABLES LIKE " . $pdo->quote($table))->fetch();
+    } catch (Throwable $e) {
+        $cache[$table] = false;
+    }
+
+    return $cache[$table];
+}
+
+/**
+ * Upload an image into assets/images/{subdir}/ keeping the original basename.
+ *
+ * @param array<string, mixed>|null $file
+ */
+function admin_upload_image(?array $file, string $subdir = 'artwork'): ?string
+{
+    if (!$file || !isset($file['error']) || (int) $file['error'] === UPLOAD_ERR_NO_FILE) {
+        return null;
+    }
+
+    if ((int) $file['error'] !== UPLOAD_ERR_OK) {
+        $GLOBALS['_db_last_error'] = 'Image upload failed (code ' . (int) $file['error'] . ').';
+        return null;
+    }
+
+    $tmp = (string) ($file['tmp_name'] ?? '');
+    if ($tmp === '' || !is_uploaded_file($tmp)) {
+        $GLOBALS['_db_last_error'] = 'Invalid uploaded file.';
+        return null;
+    }
+
+    if ((int) ($file['size'] ?? 0) > 5 * 1024 * 1024) {
+        $GLOBALS['_db_last_error'] = 'Image must be 5MB or smaller.';
+        return null;
+    }
+
+    $finfo = new finfo(FILEINFO_MIME_TYPE);
+    $mime = $finfo->file($tmp) ?: '';
+    if (!in_array($mime, ['image/jpeg', 'image/png', 'image/webp'], true)) {
+        $GLOBALS['_db_last_error'] = 'Use a JPG, PNG, or WebP image.';
+        return null;
+    }
+
+    $subdir = trim(str_replace(['..', '\\'], '', $subdir), '/');
+    if ($subdir === '') {
+        $subdir = 'artwork';
+    }
+
+    $filename = basename(str_replace(["\0", '\\'], '', (string) ($file['name'] ?? '')));
+    $filename = trim($filename);
+    if ($filename === '' || str_contains($filename, '..')) {
+        $GLOBALS['_db_last_error'] = 'Invalid image filename.';
+        return null;
+    }
+
+    $ext = strtolower(pathinfo($filename, PATHINFO_EXTENSION));
+    if (!in_array($ext, ['jpg', 'jpeg', 'png', 'webp'], true)) {
+        $GLOBALS['_db_last_error'] = 'Filename must end with .jpg, .jpeg, .png, or .webp.';
+        return null;
+    }
+
+    $dir = dirname(__DIR__) . '/assets/images/' . $subdir;
+    if (!is_dir($dir) && !mkdir($dir, 0755, true) && !is_dir($dir)) {
+        $GLOBALS['_db_last_error'] = 'Could not access image folder.';
+        return null;
+    }
+
+    $dest = $dir . '/' . $filename;
+    if (is_file($dest)) {
+        $stem = pathinfo($filename, PATHINFO_FILENAME);
+        $filename = $stem . '-' . date('YmdHis') . '.' . $ext;
+        $dest = $dir . '/' . $filename;
+    }
+
+    if (!move_uploaded_file($tmp, $dest)) {
+        $GLOBALS['_db_last_error'] = 'Could not save uploaded image.';
+        return null;
+    }
+
+    @chmod($dest, 0644);
+    return 'images/' . $subdir . '/' . $filename;
+}
+
+/**
+ * @return array<int, array<string, mixed>>|null null when table missing / DB error
+ */
+function student_work_from_db(bool $activeOnly = true): ?array
+{
+    if (!table_exists('student_work')) {
+        return null;
+    }
+
+    $pdo = db();
+    if (!$pdo) {
+        return null;
+    }
+
+    try {
+        $sql = 'SELECT id, image, image_alt, sort_order, is_active FROM student_work';
+        if ($activeOnly) {
+            $sql .= ' WHERE is_active = 1';
+        }
+        $sql .= ' ORDER BY sort_order ASC, id ASC';
+        return $pdo->query($sql)->fetchAll() ?: [];
+    } catch (Throwable $e) {
+        error_log('student_work_from_db failed: ' . $e->getMessage());
+        $GLOBALS['_db_last_error'] = $e->getMessage();
+        return null;
+    }
+}
+
+/**
+ * @param array<string, mixed> $data
+ */
+function student_work_save(array $data, ?int $id = null): ?int
+{
+    if (!table_exists('student_work')) {
+        $GLOBALS['_db_last_error'] = 'Run database/admin-galleries.sql first.';
+        return null;
+    }
+
+    $pdo = db();
+    if (!$pdo) {
+        return null;
+    }
+
+    $image = trim((string) ($data['image'] ?? ''));
+    $alt = trim((string) ($data['image_alt'] ?? ''));
+    $sort = (int) ($data['sort_order'] ?? 0);
+    $active = !empty($data['is_active']) ? 1 : 0;
+
+    if ($image === '') {
+        $GLOBALS['_db_last_error'] = 'Image is required.';
+        return null;
+    }
+
+    try {
+        if ($id) {
+            $stmt = $pdo->prepare(
+                'UPDATE student_work SET image = ?, image_alt = ?, sort_order = ?, is_active = ? WHERE id = ?'
+            );
+            $stmt->execute([$image, $alt !== '' ? $alt : null, $sort, $active, $id]);
+            return $id;
+        }
+
+        $stmt = $pdo->prepare(
+            'INSERT INTO student_work (image, image_alt, sort_order, is_active) VALUES (?, ?, ?, ?)'
+        );
+        $stmt->execute([$image, $alt !== '' ? $alt : null, $sort, $active]);
+        return (int) $pdo->lastInsertId();
+    } catch (Throwable $e) {
+        error_log('student_work_save failed: ' . $e->getMessage());
+        $GLOBALS['_db_last_error'] = $e->getMessage();
+        return null;
+    }
+}
+
+function student_work_delete(int $id): bool
+{
+    if (!table_exists('student_work') || $id < 1) {
+        return false;
+    }
+
+    $pdo = db();
+    if (!$pdo) {
+        return false;
+    }
+
+    try {
+        $stmt = $pdo->prepare('DELETE FROM student_work WHERE id = ?');
+        $stmt->execute([$id]);
+        return $stmt->rowCount() > 0;
+    } catch (Throwable $e) {
+        error_log('student_work_delete failed: ' . $e->getMessage());
+        $GLOBALS['_db_last_error'] = $e->getMessage();
+        return false;
+    }
+}
+
+/**
+ * @return array<int, array<string, mixed>>|null
+ */
+function recent_project_items_from_db(): ?array
+{
+    if (!table_exists('recent_project_items')) {
+        return null;
+    }
+
+    $pdo = db();
+    if (!$pdo) {
+        return null;
+    }
+
+    try {
+        $rows = $pdo->query(
+            'SELECT r.product_id, r.sort_order, r.is_bestseller
+             FROM recent_project_items r
+             INNER JOIN products p ON p.id = r.product_id
+             ORDER BY r.sort_order ASC, p.title ASC'
+        )->fetchAll() ?: [];
+        return $rows;
+    } catch (Throwable $e) {
+        error_log('recent_project_items_from_db failed: ' . $e->getMessage());
+        $GLOBALS['_db_last_error'] = $e->getMessage();
+        return null;
+    }
+}
+
+/**
+ * Replace the recent-projects selection.
+ *
+ * @param array<int, array{product_id:string, sort_order?:int, is_bestseller?:bool}> $items
+ */
+function recent_project_items_save(array $items): bool
+{
+    if (!table_exists('recent_project_items')) {
+        $GLOBALS['_db_last_error'] = 'Run database/admin-galleries.sql first.';
+        return false;
+    }
+
+    $pdo = db();
+    if (!$pdo) {
+        return false;
+    }
+
+    $clean = [];
+    foreach ($items as $item) {
+        $pid = trim((string) ($item['product_id'] ?? ''));
+        if ($pid === '' || isset($clean[$pid])) {
+            continue;
+        }
+        $clean[$pid] = [
+            'product_id' => $pid,
+            'sort_order' => (int) ($item['sort_order'] ?? 0),
+            'is_bestseller' => !empty($item['is_bestseller']) ? 1 : 0,
+        ];
+    }
+
+    try {
+        $pdo->beginTransaction();
+        $pdo->exec('DELETE FROM recent_project_items');
+        if ($clean !== []) {
+            $ins = $pdo->prepare(
+                'INSERT INTO recent_project_items (product_id, sort_order, is_bestseller) VALUES (?, ?, ?)'
+            );
+            foreach ($clean as $row) {
+                $ins->execute([$row['product_id'], $row['sort_order'], $row['is_bestseller']]);
+            }
+        }
+        $pdo->commit();
+        return true;
+    } catch (Throwable $e) {
+        if ($pdo->inTransaction()) {
+            $pdo->rollBack();
+        }
+        error_log('recent_project_items_save failed: ' . $e->getMessage());
+        $GLOBALS['_db_last_error'] = $e->getMessage();
+        return false;
+    }
+}
+
+/**
+ * Products selected for the Recent Projects page (with bestseller flag).
+ *
+ * @return array<int, array<string, mixed>>
+ */
+function recent_projects_products(): array
+{
+    $picks = recent_project_items_from_db();
+    if ($picks === null) {
+        // Table missing — legacy fallback
+        $available = array_values(array_filter(products(), fn($a) => ($a['status'] ?? 'available') !== 'sold'));
+        $featured = array_values(array_filter($available, fn($a) => !empty($a['featured'])));
+        $rest = array_values(array_filter($available, fn($a) => empty($a['featured'])));
+        $merged = array_slice(array_merge($featured, $rest), 0, 6);
+        foreach ($merged as &$item) {
+            $item['is_bestseller'] = !empty($item['featured']);
+        }
+        unset($item);
+        return $merged;
+    }
+
+    if ($picks === []) {
+        return [];
+    }
+
+    $byId = [];
+    foreach (products_from_db(true) ?? [] as $product) {
+        $byId[(string) $product['id']] = $product;
+    }
+
+    $out = [];
+    foreach ($picks as $pick) {
+        $id = (string) ($pick['product_id'] ?? '');
+        if ($id === '' || !isset($byId[$id])) {
+            continue;
+        }
+        if (($byId[$id]['status'] ?? 'available') === 'sold') {
+            continue;
+        }
+        $item = $byId[$id];
+        $item['is_bestseller'] = !empty($pick['is_bestseller']);
+        $item['recent_sort'] = (int) ($pick['sort_order'] ?? 0);
+        $out[] = $item;
+    }
+
+    return $out;
+}

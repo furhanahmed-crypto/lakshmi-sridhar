@@ -19,7 +19,7 @@ define('WHATSAPP_NUMBER', '353894413077'); // digits only for wa.me
 define('WHATSAPP_URL', 'https://wa.me/' . WHATSAPP_NUMBER);
 define('CONTACT_EMAIL', 'Lakshmi.Sridharj@gmail.com');
 
-define('ASSET_VERSION', '2.3.1');
+define('ASSET_VERSION', '2.3.3');
 define('PRINT_PRICE_RATIO', 0.5); // legacy helper only; print prices are stored in product_sizes
 define('DEFAULT_ORIGINAL_DIMENSIONS', '10 inch × 13 inch');
 
@@ -225,12 +225,35 @@ function products_in_category(string $category): array
 }
 
 /**
- * Student / children artwork paths for the Courses masonry (filesystem, not shop).
+ * Student / children artwork for the Courses masonry.
+ * Prefers Admin-managed DB rows; falls back to the classroom folder on disk.
  *
- * @return array<int, array{src:string, alt:string}>
+ * @return array<int, array{src:string, alt:string, id?:int}>
  */
 function student_work_images(): array
 {
+    $fromDb = student_work_from_db(true);
+    if (is_array($fromDb)) {
+        $out = [];
+        foreach ($fromDb as $row) {
+            $src = trim((string) ($row['image'] ?? ''));
+            if ($src === '') {
+                continue;
+            }
+            $alt = trim((string) ($row['image_alt'] ?? ''));
+            if ($alt === '') {
+                $stem = pathinfo($src, PATHINFO_FILENAME);
+                $alt = ucwords(str_replace(['-', '_'], ' ', $stem)) . ' — student artwork from Lakshmi’s classes';
+            }
+            $out[] = [
+                'id' => (int) ($row['id'] ?? 0),
+                'src' => $src,
+                'alt' => $alt,
+            ];
+        }
+        return $out;
+    }
+
     $dir = dirname(__DIR__) . '/assets/images/artwork/students-christmas-cards-2026';
     if (!is_dir($dir)) {
         return [];

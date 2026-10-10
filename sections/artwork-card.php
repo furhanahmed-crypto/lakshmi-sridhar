@@ -25,6 +25,9 @@ $default_size = $item['default_size'] ?? 'A1';
 $active_key = isset($sizes[$default_size]) ? $default_size : array_key_first($sizes);
 $active = ($active_key !== null && isset($sizes[$active_key])) ? $sizes[$active_key] : null;
 $show_bestseller_badge = !empty($show_bestseller_badge);
+$is_bestseller = array_key_exists('is_bestseller', $item)
+    ? !empty($item['is_bestseller'])
+    : !empty($item['featured']);
 
 if ($context === 'print') {
     $display_price = (float) ($active['price'] ?? 0);
@@ -40,7 +43,7 @@ if ($context === 'print') {
 <article class="art-card<?= ($is_shop || $is_gallery) ? ' art-card--product' : '' ?><?= $is_gallery ? ' art-card--tile' : '' ?> reveal" id="<?= e($item['id'] ?? '') ?>">
     <a class="art-card__hit" href="<?= e($detail_url) ?>">
         <div class="art-card__media">
-            <?php if ($show_bestseller_badge && !empty($item['featured'])): ?>
+            <?php if ($show_bestseller_badge && $is_bestseller): ?>
                 <span class="art-card__badge">Best Seller</span>
             <?php endif; ?>
             <div class="art-card__frame">

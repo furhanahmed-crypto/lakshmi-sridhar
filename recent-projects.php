@@ -5,11 +5,7 @@ $current_page = 'projects';
 $page_title = 'Recent Projects';
 $page_description = 'From the studio — recent paintings and series by Lakshmi Sridhar, available as originals or prints.';
 
-$artworks = products();
-$available = array_values(array_filter($artworks, fn($a) => ($a['status'] ?? 'available') !== 'sold'));
-$featured = array_values(array_filter($available, fn($a) => !empty($a['featured'])));
-$rest = array_values(array_filter($available, fn($a) => empty($a['featured'])));
-$artworks = array_slice(array_merge($featured, $rest), 0, 6);
+$artworks = recent_projects_products();
 
 require __DIR__ . '/includes/head.php';
 require __DIR__ . '/includes/header.php';
@@ -29,7 +25,7 @@ $eyebrow = 'Recent Projects';
         <div class="container">
             <div class="section-intro reveal">
                 <p class="eyebrow">Recent Projects</p>
-                <h2 id="bestsellers-heading" class="section-title split-chars">Last six projects from the studio</h2>
+                <h2 id="bestsellers-heading" class="section-title split-chars">Recent projects from the studio</h2>
                 <p class="lede">A grid of recent work — tap a piece to see sizes, original and print prices, and enquire.</p>
             </div>
             <?php $items = $artworks; include __DIR__ . '/sections/products-notice.php'; ?>
@@ -43,6 +39,12 @@ $eyebrow = 'Recent Projects';
                     ?>
                 <?php endforeach; ?>
             </div>
+            <?php else: ?>
+                <p class="lede reveal">New studio pieces will appear here soon. Meanwhile, browse originals and prints in the shop.</p>
+                <div class="btn-row reveal">
+                    <a class="btn btn--primary" href="<?= e(page_url('purchase/originals/')) ?>">Shop originals</a>
+                    <a class="btn btn--secondary" href="<?= e(page_url('purchase/prints/')) ?>">Shop prints</a>
+                </div>
             <?php endif; ?>
         </div>
     </section>

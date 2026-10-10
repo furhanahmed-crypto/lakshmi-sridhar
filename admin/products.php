@@ -27,6 +27,10 @@ unset($_SESSION['admin_flash']);
                 <h1>Products</h1>
                 <p><?= count($products) ?> item<?= count($products) === 1 ? '' : 's' ?> in the catalogue</p>
             </div>
+            <div class="admin-actions">
+                <a class="btn btn--primary btn--sm" href="<?= e(admin_url('edit.php')) ?>">Add product</a>
+                <?php include __DIR__ . '/page-actions.php'; ?>
+            </div>
         </div>
 
         <?php if ($flash): ?>
